@@ -3,7 +3,7 @@ import { ResultData, ChannelIdeaSet } from '../types';
 import Spinner from './Spinner';
 import { 
     CopyIcon, CheckIcon, ChartBarIcon, MagnifyingGlassIcon, ScaleIcon, CompassIcon, 
-    CogIcon, FireIcon, PaletteIcon, CalendarIcon, BookOpenIcon 
+    CogIcon, FireIcon, PaletteIcon, CalendarIcon, BookOpenIcon, PlusIcon, MinusIcon
 } from './icons';
 
 interface ResultsDisplayProps {
@@ -132,8 +132,59 @@ const renderChannelIdeaSets = (sets: ChannelIdeaSet[]) => (
   </div>
 );
 
+// Helper Components for Analysis Display
+const Collapsible: React.FC<{ title: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = true }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+    return (
+        <div className="bg-slate-800/50 rounded-lg border border-slate-700">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 text-left">
+                <div className="flex-grow font-semibold text-slate-200">{title}</div>
+                <div className="text-slate-400">
+                    {isOpen ? <MinusIcon className="w-5 h-5" /> : <PlusIcon className="w-5 h-5" />}
+                </div>
+            </button>
+            {isOpen && <div className="p-4 border-t border-slate-700">{children}</div>}
+        </div>
+    );
+};
+
+const SimpleHorizontalBarChart: React.FC<{ data: { label: string; value: number; formattedValue: string }[]; title: string }> = ({ data, title }) => {
+    const maxValue = Math.max(...data.map(d => d.value), 0);
+    if (maxValue === 0) return null; // Don't render if no data
+    return (
+        <div className="my-4">
+            <h4 className="font-semibold text-slate-300 mb-2">{title}</h4>
+            <div className="space-y-2">
+                {data.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                        <div className="w-2/5 truncate text-slate-400" title={item.label}>{item.label}</div>
+                        <div className="w-3/5 flex items-center gap-2">
+                            <div className="flex-grow bg-slate-700 rounded-full h-4">
+                                <div
+                                    className="bg-primary-500 h-4 rounded-full"
+                                    style={{ width: `${(item.value / maxValue) * 100}%` }}
+                                ></div>
+                            </div>
+                            <span className="w-20 text-right font-medium text-slate-300">{item.formattedValue}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// Main Analysis Rendering Logic
 const renderAnalysisResult = (markdownText: string) => {
     const sections = markdownText.trim().split(/\n(?=##\s)/);
+    const [copied, setCopied] = useState(false);
+
+    const copyReportToClipboard = () => {
+        navigator.clipboard.writeText(markdownText).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
 
     const getIconAndTitle = (section: string): { icon: React.ReactNode, title: string, restOfContent: string } => {
         const lines = section.trim().split('\n');
@@ -156,14 +207,102 @@ const renderAnalysisResult = (markdownText: string) => {
         
         return { icon, title: titleLine, restOfContent };
     };
+    
+    // Parser for "So sánh chéo" table
+    const parseComparisonTable = (markdown: string) => {
+        const lines = markdown.split('\n').filter(line => line.startsWith('|'));
+        if (lines.length < 3) return [];
+        const dataLines = lines.slice(2);
+        return dataLines.map(line => {
+            const [_, kênh, __, tổngView, viewTB, ___, likeView] = line.split('|').map(s => s.trim());
+            return {
+                kênh,
+                tổngView: parseFloat(tổngView.replace(/,/g, '')),
+                viewTB: parseFloat(viewTB.replace(/,/g, '')),
+                likeView: parseFloat(likeView.replace('%', '')),
+            };
+        }).filter(d => d.kênh && !isNaN(d.tổngView));
+    };
+    
+    // Parser for "Top 5 video" lists
+    const parseTopVideos = (content: string, type: 'view' | 'like') => {
+        const regex = type === 'view'
+            ? /-\s(.*?)\s+\(([\d,.]+)\s+lượt xem\)/g
+            : /-\s(.*?)\s+\(([\d,.]+)%\)/g;
+        const matches = [...content.matchAll(regex)];
+        return matches.map(match => ({
+            label: match[1].trim(),
+            value: parseFloat(match[2].replace(/,/g, '')),
+            formattedValue: type === 'view' ? parseInt(match[2].replace(/,/g, '')).toLocaleString('vi-VN') : `${match[2]}%`,
+        })).slice(0, 5);
+    };
 
     return (
         <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-center text-slate-100">Kết Quả Phân Tích Chi Tiết</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <h2 className="text-2xl font-bold text-center text-slate-100">Kết Quả Phân Tích Chi Tiết</h2>
+                <button 
+                  onClick={copyReportToClipboard} 
+                  className={`flex items-center gap-2 py-2 px-4 rounded-lg transition-colors text-sm font-medium ${
+                    copied 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  }`}
+                  title={copied ? 'Đã chép!' : 'Chép toàn bộ báo cáo'}
+                >
+                  {copied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
+                  {copied ? 'Đã chép' : 'Chép báo cáo'}
+                </button>
+            </div>
             {sections.map((section, index) => {
                 const { icon, title, restOfContent } = getIconAndTitle(section);
-                const sectionWithSeparators = restOfContent.replace(/\n(###\s)/g, '\n<hr class="my-6 border-slate-700"/>\n$1');
-                const htmlContent = marked.parse(sectionWithSeparators);
+                let chartElement: React.ReactNode = null;
+                let customContent: React.ReactNode = null;
+
+                if (title.toLowerCase().includes('so sánh chéo')) {
+                    const tableData = parseComparisonTable(restOfContent);
+                    if (tableData.length > 0) {
+                        chartElement = (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                <SimpleHorizontalBarChart
+                                    title="So sánh Tổng Lượt Xem"
+                                    data={tableData.map(d => ({ label: d.kênh, value: d.tổngView, formattedValue: d.tổngView.toLocaleString('vi-VN') }))}
+                                />
+                                <SimpleHorizontalBarChart
+                                    title="So sánh Tỷ lệ Like/View"
+                                    data={tableData.map(d => ({ label: d.kênh, value: d.likeView, formattedValue: `${d.likeView.toFixed(2)}%` }))}
+                                />
+                            </div>
+                        );
+                    }
+                }
+                
+                if (title.toLowerCase().includes('phân tích chi tiết')) {
+                    const channelSections = restOfContent.trim().split(/\n(?=###\sKênh:)/);
+                    customContent = (
+                        <div className="space-y-4">
+                        {channelSections.map((channelMarkdown, i) => {
+                            const lines = channelMarkdown.trim().split('\n');
+                            const channelTitle = lines.shift()?.replace(/###\sKênh:/, '').trim() || `Kênh ${i + 1}`;
+                            const content = lines.join('\n');
+                            
+                            const topViewsData = parseTopVideos(content, 'view');
+                            const topLikesData = parseTopVideos(content, 'like');
+
+                            return (
+                                <Collapsible key={i} title={channelTitle} defaultOpen={i < 2}>
+                                    {topViewsData.length > 0 && <SimpleHorizontalBarChart title="Top 5 video view cao nhất" data={topViewsData} />}
+                                    {topLikesData.length > 0 && <SimpleHorizontalBarChart title="Top 5 video tỷ lệ Like/View cao nhất" data={topLikesData} />}
+                                    <div 
+                                        className="prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 prose-a:text-primary-400 hover:prose-a:text-primary-300 prose-table:border-collapse prose-table:w-full prose-thead:border-b prose-thead:border-slate-600 prose-th:p-2 prose-th:text-left prose-th:font-semibold prose-tbody:divide-y prose-tbody:divide-slate-700 prose-td:p-2 prose-td:align-baseline prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono prose-hr:border-slate-700 prose-p:first:mt-0 prose-ul:first:mt-0 prose-ol:first:mt-0 prose-table:first:mt-0 prose-h3:first:mt-0 prose-h4:first:mt-0"
+                                        dangerouslySetInnerHTML={{ __html: marked.parse(content) }}
+                                    />
+                                </Collapsible>
+                            );
+                        })}
+                        </div>
+                    );
+                }
 
                 return (
                     <div key={index} className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
@@ -171,22 +310,13 @@ const renderAnalysisResult = (markdownText: string) => {
                            {icon && <div className="text-primary-400 flex-shrink-0">{icon}</div>}
                            <h2 className="text-xl font-bold text-slate-100">{title}</h2>
                         </div>
-                        <div 
-                            className="prose prose-invert max-w-none 
-                                       prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 
-                                       prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 
-                                       prose-a:text-primary-400 hover:prose-a:text-primary-300
-                                       prose-table:border-collapse prose-table:w-full
-                                       prose-thead:border-b prose-thead:border-slate-600
-                                       prose-th:p-2 prose-th:text-left prose-th:font-semibold
-                                       prose-tbody:divide-y prose-tbody:divide-slate-700
-                                       prose-td:p-2 prose-td:align-baseline
-                                       prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono
-                                       prose-hr:border-slate-700
-                                       prose-p:first:mt-0 prose-ul:first:mt-0 prose-ol:first:mt-0 
-                                       prose-table:first:mt-0 prose-h3:first:mt-0 prose-h4:first:mt-0"
-                            dangerouslySetInnerHTML={{ __html: htmlContent }} 
-                        />
+                        {chartElement}
+                        {customContent ? customContent : (
+                            <div 
+                                className="prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 prose-a:text-primary-400 hover:prose-a:text-primary-300 prose-table:border-collapse prose-table:w-full prose-thead:border-b prose-thead:border-slate-600 prose-th:p-2 prose-th:text-left prose-th:font-semibold prose-tbody:divide-y prose-tbody:divide-slate-700 prose-td:p-2 prose-td:align-baseline prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono prose-hr:border-slate-700 prose-p:first:mt-0 prose-ul:first:mt-0 prose-ol:first:mt-0 prose-table:first:mt-0 prose-h3:first:mt-0 prose-h4:first:mt-0"
+                                dangerouslySetInnerHTML={{ __html: marked.parse(restOfContent) }} 
+                            />
+                        )}
                     </div>
                 );
             })}

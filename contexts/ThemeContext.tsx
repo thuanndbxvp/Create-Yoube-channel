@@ -68,9 +68,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME);
       return (storedTheme as Theme) || 'orange';
     } catch (error) {
-      // FIX: The multi-argument console.error call was causing a type error. Split into two separate calls to safely log the descriptive message and the unknown error object.
       console.error("Failed to read theme from localStorage:");
-      console.error(error);
+      // FIX: The 'unknown' type from the catch block cannot be directly passed to console.error, which expects a string.
+      // We safely handle the error by checking its type before logging.
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error(String(error));
+      }
       return 'orange';
     }
   });

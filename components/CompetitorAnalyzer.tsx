@@ -42,7 +42,7 @@ Hãy phân tích và xuất ra báo cáo đầy đủ theo cấu trúc chuẩn s
 - 3 insight liên-kênh và điểm khác biệt đáng chú ý
 
 ## 🧭 4. Hướng nội dung cho KÊNH CỦA TÔI (Content Direction for My Channel)
-- 3 persona khán giả mục tiêu (nỗi đau – động lực – ngữ cảnh xem – thời gian xem)
+- Chân dung khán giả mục tiêu (nỗi đau – động lực – ngữ cảnh xem – thời gian xem)
 - 3 content pillars cốt lõi + giải thích vì sao phù hợp
 - 5 định dạng video đề xuất (ví dụ: story-driven, short facts, animated explainer …)
 - Độ dài tối ưu và 3 khung giờ đăng hiệu quả nhất
