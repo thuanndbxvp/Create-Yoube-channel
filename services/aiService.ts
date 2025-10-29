@@ -1,12 +1,9 @@
-// FIX: Updated imports to use ChannelIdeaSet and LANGUAGES from types, which resolves the original error.
 import { GoogleGenAI, Type } from "@google/genai";
 import { ChannelIdeaSet, LANGUAGES } from "../types";
 
-// FIX: Removed module-level API key and ai instance to make the service stateless,
-// consistent with the rest of the application which passes the API key per-request.
+// This service is now designed to be stateless.
+// It creates a new AI client for each request using the provided API key.
 
-// FIX: Replaced the outdated schema with the one used in aiService.ts,
-// which matches the ChannelIdeaSet type and the application's needs.
 const channelIdeaSetSchema = {
   type: Type.OBJECT,
   properties: {
@@ -50,9 +47,6 @@ const finalSchema = {
 }
 
 
-// FIX: Updated the function to align with the application's architecture.
-// It now accepts language, apiKey, and model, returns an array of ChannelIdeaSet,
-// and uses an updated prompt and schema to generate multiple ideas.
 export const generateChannelAssets = async (idea: string, language: string, apiKey: string, model: string): Promise<ChannelIdeaSet[]> => {
   if (!apiKey) throw new Error("API Key is required.");
   
@@ -89,14 +83,12 @@ Yêu cầu quan trọng:
   return parsedResponse as ChannelIdeaSet[];
 };
 
-// FIX: Updated the function to accept apiKey and model parameters to make it stateless.
 export const analyzeCompetitorData = async (prompt: string, excelData: string, apiKey: string, model: string): Promise<string> => {
-    if (!apiKey) throw new Error("API Key is required.");
+  if (!apiKey) throw new Error("API Key is required.");
 
-    // FIX: Create a new AI instance with the provided key for this request.
-    const ai = new GoogleGenAI({ apiKey });
-    
-    const fullPrompt = `Bạn là một nhà phân tích dữ liệu chuyên về chiến lược YouTube. 
+  const ai = new GoogleGenAI({ apiKey });
+
+  const fullPrompt = `Bạn là một nhà phân tích dữ liệu chuyên về chiến lược YouTube. 
 Nhiệm vụ của bạn là phân tích dữ liệu về các kênh đối thủ cạnh tranh và thực hiện các yêu cầu trong prompt được cung cấp.
 Dữ liệu được cung cấp là nội dung của một file Excel, với mỗi sheet (tương ứng một kênh) được phân tách bằng "--- START OF SHEET: [tên sheet] ---" và "--- END OF SHEET: [tên sheet] ---". Bên trong mỗi phần là dữ liệu dạng CSV.
 Hãy đưa ra một bản phân tích chi tiết, sâu sắc và các đề xuất chiến lược có thể hành động.
@@ -114,7 +106,6 @@ ${excelData}
 Hãy trình bày kết quả phân tích bằng tiếng Việt một cách rõ ràng, mạch lạc, sử dụng Markdown để định dạng.`;
 
   const response = await ai.models.generateContent({
-    // FIX: Use the model provided as a parameter instead of a hardcoded value.
     model: model,
     contents: fullPrompt,
   });

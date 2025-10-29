@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { analyzeCompetitorData } from '../services/geminiService';
+import { analyzeCompetitorData } from '../services/aiService';
 import { ResultData } from '../types';
+import { useApi } from '../contexts/ApiContext';
 import { UploadIcon, ChartBarIcon } from './icons';
 
 declare var XLSX: any;
@@ -93,6 +94,10 @@ const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
 const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, setResult, setError, handleReset }) => {
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
+  const { 
+    activeApiKey, 
+    selectedModelForActiveProvider
+  } = useApi();
 
   const handleExcelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -102,6 +107,10 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeApiKey || !selectedModelForActiveProvider) {
+      setError('Vui lòng kích hoạt một API key và chọn model trong phần Quản lý API.');
+      return;
+    }
     if (!excelFile) {
       setError('Vui lòng tải lên file dữ liệu Excel.');
       return;
@@ -123,11 +132,12 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
         allSheetsData += `\n--- END OF SHEET: ${sheetName} ---\n\n`;
       });
       
-      const result = await analyzeCompetitorData(ANALYSIS_PROMPT, allSheetsData);
+      const result = await analyzeCompetitorData(ANALYSIS_PROMPT, allSheetsData, activeApiKey.key, selectedModelForActiveProvider);
       setResult(result);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi xử lý file. Vui lòng thử lại.');
+      const errorMessage = err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi xử lý file. Vui lòng thử lại.';
+      setError(`Lỗi: ${errorMessage}. Hãy kiểm tra lại API key của bạn.`);
     } finally {
       setLoading(false);
     }
@@ -149,14 +159,18 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
                 {excelFile ? excelFile.name : 'Tải lên Dữ liệu Excel'}
             </button>
         </div>
+
         <button
           type="submit"
-          disabled={!excelFile}
-          className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-500 disabled:cursor-not-allowed disabled:transform-none"
+          disabled={!excelFile || !activeApiKey}
+          className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
         >
           <ChartBarIcon className="w-5 h-5" />
           Phân Tích
         </button>
+        {!activeApiKey && (
+          <p className="text-center text-sm text-yellow-400">Vui lòng thêm và kích hoạt API key để sử dụng tính năng này.</p>
+        )}
       </form>
     </div>
   );

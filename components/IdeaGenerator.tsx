@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
-import { generateChannelAssets } from '../services/geminiService';
-import { ResultData } from '../types';
+import { generateChannelAssets } from '../services/aiService';
+import { ResultData, LANGUAGES } from '../types';
+import { useApi } from '../contexts/ApiContext';
 import { SparklesIcon } from './icons';
 
 interface IdeaGeneratorProps {
@@ -13,9 +13,18 @@ interface IdeaGeneratorProps {
 
 const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, setError, handleReset }) => {
   const [idea, setIdea] = useState<string>('');
+  const [language, setLanguage] = useState<string>('en-US');
+  const { 
+    activeApiKey, 
+    selectedModelForActiveProvider
+  } = useApi();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeApiKey || !selectedModelForActiveProvider) {
+      setError('Vui lòng kích hoạt một API key và chọn model trong phần Quản lý API.');
+      return;
+    }
     if (!idea.trim()) {
       setError('Vui lòng nhập ý tưởng của bạn.');
       return;
@@ -25,11 +34,12 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
     setLoading(true);
 
     try {
-      const result = await generateChannelAssets(idea);
+      const result = await generateChannelAssets(idea, language, activeApiKey.key, selectedModelForActiveProvider);
       setResult(result);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+      const errorMessage = err instanceof Error ? err.message : 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+      setError(`Lỗi: ${errorMessage}. Hãy kiểm tra lại API key của bạn.`);
     } finally {
       setLoading(false);
     }
@@ -41,7 +51,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
         Biến ý tưởng của bạn thành một kênh YouTube hoàn chỉnh
       </h2>
       <p className="text-center text-slate-400">
-        Chỉ cần nhập chủ đề hoặc ý tưởng, AI sẽ đề xuất tên kênh, mô tả, hashtag và hơn thế nữa.
+        Chỉ cần nhập chủ đề hoặc ý tưởng, AI sẽ đề xuất nhiều bộ ý tưởng độc đáo cho kênh của bạn.
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
@@ -50,13 +60,34 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
           placeholder="Ví dụ: một kênh về làm bánh mì tại nhà cho người mới bắt đầu..."
           className="w-full h-32 p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 resize-none"
         />
+
+        <div>
+          <label htmlFor="language-select" className="block text-sm font-medium text-slate-400 mb-1">
+            Ngôn ngữ kênh
+          </label>
+          <select
+            id="language-select"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200"
+          >
+            {Object.entries(LANGUAGES).map(([code, name]) => (
+              <option key={code} value={code}>{name}</option>
+            ))}
+          </select>
+        </div>
+        
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-500 disabled:cursor-not-allowed disabled:transform-none"
+          disabled={!activeApiKey}
+          className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
         >
           <SparklesIcon className="w-5 h-5" />
           Tạo Ý Tưởng
         </button>
+         {!activeApiKey && (
+          <p className="text-center text-sm text-yellow-400">Vui lòng thêm và kích hoạt API key để sử dụng tính năng này.</p>
+        )}
       </form>
     </div>
   );
