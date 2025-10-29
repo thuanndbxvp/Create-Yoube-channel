@@ -38,6 +38,22 @@ const channelIdeaSetSchema = {
     logoPrompt: {
         type: Type.STRING,
         description: "Một prompt chi tiết, bằng tiếng Anh, để sử dụng với các công cụ AI tạo hình ảnh để tạo ra logo kênh.",
+    },
+    channelName_vi: {
+        type: Type.STRING,
+        description: "Giải thích ý nghĩa hoặc concept của tên kênh bằng tiếng Việt. Chỉ cung cấp trường này nếu ngôn ngữ được yêu cầu không phải là tiếng Việt.",
+    },
+    description_vi: {
+        type: Type.STRING,
+        description: "Tóm tắt mô tả kênh bằng tiếng Việt. Chỉ cung cấp trường này nếu ngôn ngữ được yêu cầu không phải là tiếng Việt.",
+    },
+    bannerIdea_vi: {
+        type: Type.STRING,
+        description: "Giải thích ý tưởng banner bằng tiếng Việt. Chỉ cung cấp trường này nếu ngôn ngữ được yêu cầu không phải là tiếng Việt.",
+    },
+    logoIdea_vi: {
+        type: Type.STRING,
+        description: "Giải thích ý tưởng logo bằng tiếng Việt. Chỉ cung cấp trường này nếu ngôn ngữ được yêu cầu không phải là tiếng Việt.",
     }
   },
   required: ["channelName", "description", "hashtags", "bannerIdea", "logoIdea", "bannerPrompt", "logoPrompt"],
@@ -60,6 +76,10 @@ export const generateChannelAssets = async (idea: string, language: string, apiK
 
   const languageName = (LANGUAGES as Record<string, string>)[language] || 'Tiếng Việt';
   
+  const vietnameseExplanationInstruction = language !== 'vi-VN'
+    ? `4.  **Chú thích Tiếng Việt:** Vì ngôn ngữ được chọn không phải là tiếng Việt, hãy cung cấp thêm một phần giải thích ngắn gọn bằng tiếng Việt cho các mục sau: 'channelName_vi', 'description_vi', 'bannerIdea_vi', 'logoIdea_vi'.`
+    : '';
+
   const prompt = `Bạn là một chuyên gia sáng tạo và chiến lược xây dựng kênh YouTube. Dựa trên ý tưởng sau đây, hãy tạo ra 3 đến 5 bộ ý tưởng kênh hoàn chỉnh và riêng biệt.
 Đối với mỗi bộ ý tưởng, hãy cung cấp đầy đủ các thông tin theo cấu trúc JSON được yêu cầu.
 
@@ -67,6 +87,7 @@ Yêu cầu quan trọng:
 1.  **Ngôn ngữ:** Phần 'channelName', 'description', và 'hashtags' PHẢI được viết bằng ngôn ngữ sau: **${languageName}**.
 2.  **Prompt hình ảnh:** Phần 'bannerPrompt' và 'logoPrompt' PHẢI được viết bằng tiếng Anh để tương thích với các mô hình AI tạo hình ảnh.
 3.  **Sự đa dạng:** Mỗi bộ ý tưởng phải có một hướng tiếp cận, một phong cách riêng.
+${vietnameseExplanationInstruction}
 
 Ý tưởng gốc của người dùng: "${idea}"`;
 

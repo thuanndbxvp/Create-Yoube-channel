@@ -1,43 +1,104 @@
 import React, { useState } from 'react';
-import { AppTab, ResultData } from './types';
+import { AppTab, ResultData, SavedSession } from './types';
 import IdeaGenerator from './components/IdeaGenerator';
 import CompetitorAnalyzer from './components/CompetitorAnalyzer';
 import ResultsDisplay from './components/ResultsDisplay';
-import { YouTubeIcon, SparklesIcon, ChartBarIcon, KeyIcon } from './components/icons';
+import { YouTubeIcon, SparklesIcon, ChartBarIcon, KeyIcon, SaveIcon, LibraryIcon } from './components/icons';
 import ApiKeyManager from './components/ApiKeyManager';
+import Library from './components/Library';
+import { useSession } from './contexts/SessionContext';
+import ThemeSelector from './components/ThemeSelector';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.GENERATOR);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ResultData>(null);
-  const [isApiManagerOpen, setIsApiManagerOpen] = useState(false);
+  
+  // State is now separated for each tab to preserve results
+  const [generatorResult, setGeneratorResult] = useState<ResultData>(null);
+  const [analyzerResult, setAnalyzerResult] = useState<ResultData>(null);
+  const [generatorError, setGeneratorError] = useState<string | null>(null);
+  const [analyzerError, setAnalyzerError] = useState<string | null>(null);
 
-  const handleReset = () => {
-    setResult(null);
-    setError(null);
+  const [isApiManagerOpen, setIsApiManagerOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  
+  const { saveSession } = useSession();
+
+  const handleReset = (tab: AppTab) => {
+    if (tab === AppTab.GENERATOR) {
+        setGeneratorResult(null);
+        setGeneratorError(null);
+    } else {
+        setAnalyzerResult(null);
+        setAnalyzerError(null);
+    }
   };
   
   const handleTabChange = (tab: AppTab) => {
     setActiveTab(tab);
-    handleReset();
+    // No longer resetting state on tab change
   }
+
+  const handleSaveSession = () => {
+    const resultToSave = activeTab === AppTab.GENERATOR ? generatorResult : analyzerResult;
+    if (!resultToSave) return;
+    const sessionName = `${activeTab === AppTab.GENERATOR ? 'Ý tưởng' : 'Phân tích'} - ${new Date().toLocaleString('vi-VN')}`;
+    saveSession(sessionName, activeTab, resultToSave);
+  };
+
+  const handleLoadSession = (session: SavedSession) => {
+    setActiveTab(session.type);
+    if (session.type === AppTab.GENERATOR) {
+      setGeneratorResult(session.data);
+      setGeneratorError(null);
+    } else {
+      setAnalyzerResult(session.data);
+      setAnalyzerError(null);
+    }
+    setLoading(false);
+    setIsLibraryOpen(false);
+  };
+
+  const currentResult = activeTab === AppTab.GENERATOR ? generatorResult : analyzerResult;
+  const currentError = activeTab === AppTab.GENERATOR ? generatorError : analyzerError;
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative">
-      <button
-        onClick={() => setIsApiManagerOpen(true)}
-        className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10 flex-shrink-0 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
-      >
-        <KeyIcon className="w-5 h-5" />
-        <span className="hidden sm:inline">Quản lý API</span>
-      </button>
+       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10 flex items-center gap-2">
+        {currentResult && !loading && (
+            <button
+              onClick={handleSaveSession}
+              className="flex-shrink-0 flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
+              title="Lưu phiên"
+            >
+              <SaveIcon className="w-5 h-5" />
+              <span className="hidden sm:inline">Lưu Phiên</span>
+            </button>
+        )}
+        <ThemeSelector />
+        <button
+          onClick={() => setIsLibraryOpen(true)}
+          className="flex-shrink-0 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
+          title="Thư viện"
+        >
+          <LibraryIcon className="w-5 h-5" />
+          <span className="hidden sm:inline">Thư viện</span>
+        </button>
+        <button
+          onClick={() => setIsApiManagerOpen(true)}
+          className="flex-shrink-0 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
+          title="Quản lý API"
+        >
+          <KeyIcon className="w-5 h-5" />
+          <span className="hidden sm:inline">API</span>
+        </button>
+      </div>
 
       <div className="w-full max-w-4xl mx-auto">
         <header className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-2">
             <YouTubeIcon className="h-12 w-12 text-red-500" />
-            <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-500">
+            <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-secondary-500">
               Trợ lý Kênh YouTube AI
             </h1>
           </div>
@@ -53,7 +114,7 @@ const App: React.FC = () => {
                 onClick={() => handleTabChange(AppTab.GENERATOR)}
                 className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 ${
                   activeTab === AppTab.GENERATOR
-                    ? 'bg-sky-500 text-white shadow'
+                    ? 'bg-primary-500 text-white shadow'
                     : 'text-slate-300 hover:bg-white/[0.12] hover:text-white'
                 }`}
               >
@@ -65,7 +126,7 @@ const App: React.FC = () => {
                 onClick={() => handleTabChange(AppTab.ANALYZER)}
                 className={`w-full py-2.5 text-sm font-medium leading-5 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 ${
                   activeTab === AppTab.ANALYZER
-                    ? 'bg-sky-500 text-white shadow'
+                    ? 'bg-primary-500 text-white shadow'
                     : 'text-slate-300 hover:bg-white/[0.12] hover:text-white'
                 }`}
               >
@@ -78,13 +139,13 @@ const App: React.FC = () => {
           
           <div className="bg-slate-800 rounded-xl shadow-lg p-6 min-h-[200px]">
             {activeTab === AppTab.GENERATOR ? (
-              <IdeaGenerator setLoading={setLoading} setResult={setResult} setError={setError} handleReset={handleReset} />
+              <IdeaGenerator setLoading={setLoading} setResult={setGeneratorResult} setError={setGeneratorError} handleReset={() => handleReset(AppTab.GENERATOR)} />
             ) : (
-              <CompetitorAnalyzer setLoading={setLoading} setResult={setResult} setError={setError} handleReset={handleReset} />
+              <CompetitorAnalyzer setLoading={setLoading} setResult={setAnalyzerResult} setError={setAnalyzerError} handleReset={() => handleReset(AppTab.ANALYZER)} />
             )}
           </div>
 
-          <ResultsDisplay loading={loading} error={error} result={result} />
+          <ResultsDisplay loading={loading} error={currentError} result={currentResult} />
 
         </main>
       </div>
@@ -92,6 +153,7 @@ const App: React.FC = () => {
           <p>Được xây dựng với React, Tailwind CSS, và các API Generative AI.</p>
       </footer>
       <ApiKeyManager isOpen={isApiManagerOpen} onClose={() => setIsApiManagerOpen(false)} />
+      <Library isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} onLoadSession={handleLoadSession} />
     </div>
   );
 };

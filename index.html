@@ -8,7 +8,48 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        /* Custom scrollbar for a better look */
+        /* Base Variables - Default to Sky theme */
+        :root {
+            --color-primary-300: #7dd3fc; /* sky-300 */
+            --color-primary-400: #38bdf8; /* sky-400 */
+            --color-primary-500: #0ea5e9; /* sky-500 */
+            --color-primary-600: #0284c7; /* sky-600 */
+            --color-primary-700: #0369a1; /* sky-700 */
+            --color-secondary-500: #6366f1; /* indigo-500 */
+        }
+
+        /* Custom utility classes using CSS variables */
+        .bg-primary-500 { background-color: var(--color-primary-500); }
+        .bg-primary-600 { background-color: var(--color-primary-600); }
+        .hover\:bg-primary-700:hover { background-color: var(--color-primary-700); }
+
+        .text-primary-300 { color: var(--color-primary-300); }
+        .text-primary-400 { color: var(--color-primary-400); }
+        .hover\:text-primary-300:hover { color: var(--color-primary-300); }
+
+        .border-primary-500 { border-color: var(--color-primary-500); }
+        .hover\:border-primary-500\/50:hover { border-color: color-mix(in srgb, var(--color-primary-500) 50%, transparent); }
+        
+        .focus\:border-primary-500:focus { border-color: var(--color-primary-500); }
+        .focus\:ring-primary-500:focus {
+            --tw-ring-opacity: 1;
+            --tw-ring-color: var(--color-primary-500);
+        }
+
+        .from-primary-400 {
+            --tw-gradient-from: var(--color-primary-400) var(--tw-gradient-from-position);
+            --tw-gradient-to: color-mix(in srgb, var(--color-primary-400) 0%, transparent) var(--tw-gradient-to-position);
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+        }
+        .to-secondary-500 {
+            --tw-gradient-to: var(--color-secondary-500) var(--tw-gradient-to-position);
+        }
+
+        .bg-primary-500\/10 { background-color: color-mix(in srgb, var(--color-primary-500) 10%, transparent); }
+        .bg-primary-500\/20 { background-color: color-mix(in srgb, var(--color-primary-500) 20%, transparent); }
+        .hover\:bg-primary-500\/10:hover { background-color: color-mix(in srgb, var(--color-primary-500) 10%, transparent); }
+
+        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -22,7 +63,7 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
-        /* Ensure modal overlays work correctly */
+        
         body {
             position: relative;
             z-index: 0;

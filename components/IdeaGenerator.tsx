@@ -15,13 +15,13 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
   const [idea, setIdea] = useState<string>('');
   const [language, setLanguage] = useState<string>('en-US');
   const { 
-    activeApiKey, 
-    selectedModelForActiveProvider
+    activeApiKey,
+    executeApiCall
   } = useApi();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeApiKey || !selectedModelForActiveProvider) {
+    if (!activeApiKey) {
       setError('Vui lòng kích hoạt một API key và chọn model trong phần Quản lý API.');
       return;
     }
@@ -34,12 +34,13 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
     setLoading(true);
 
     try {
-      const result = await generateChannelAssets(idea, language, activeApiKey.key, selectedModelForActiveProvider);
+      // Use the context's executeApiCall which handles retries and key switching
+      const result = await executeApiCall(generateChannelAssets, idea, language);
       setResult(result);
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : 'Đã có lỗi xảy ra. Vui lòng thử lại.';
-      setError(`Lỗi: ${errorMessage}. Hãy kiểm tra lại API key của bạn.`);
+      setError(`Lỗi: ${errorMessage}.`);
     } finally {
       setLoading(false);
     }
@@ -58,7 +59,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
           value={idea}
           onChange={(e) => setIdea(e.target.value)}
           placeholder="Ví dụ: một kênh về làm bánh mì tại nhà cho người mới bắt đầu..."
-          className="w-full h-32 p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 resize-none"
+          className="w-full h-32 p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 resize-none"
         />
 
         <div>
@@ -69,7 +70,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
             id="language-select"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200"
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
           >
             {Object.entries(LANGUAGES).map(([code, name]) => (
               <option key={code} value={code}>{name}</option>
@@ -80,7 +81,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
         <button
           type="submit"
           disabled={!activeApiKey}
-          className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
         >
           <SparklesIcon className="w-5 h-5" />
           Tạo Ý Tưởng

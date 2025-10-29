@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useApi } from '../contexts/ApiContext';
 import { ApiProviderType, AVAILABLE_MODELS } from '../types';
 import { PlusIcon, TrashIcon, CheckCircleIcon, KeyIcon, XMarkIcon } from './icons';
+import { validateApiKey } from '../services/aiService';
+import Spinner from './Spinner';
 
 interface ApiKeyManagerProps {
   isOpen: boolean;
@@ -21,25 +23,43 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
   const [newKey, setNewKey] = useState('');
   const [provider, setProvider] = useState<ApiProviderType>('gemini');
   const [error, setError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleAddKey = () => {
+  const handleAddKey = async () => {
     if (!newKey.trim()) {
       setError('API key không được để trống.');
       return;
     }
     setError('');
-    addApiKey(provider, newKey);
-    setNewKey('');
+    setIsVerifying(true);
+
+    if (provider === 'openai') {
+        // OpenAI keys are added directly without validation for now
+        addApiKey(provider, newKey);
+        setNewKey('');
+        setIsVerifying(false);
+        return;
+    }
+
+    const { success, error: validationError } = await validateApiKey(provider, newKey);
+    setIsVerifying(false);
+
+    if (success) {
+      addApiKey(provider, newKey);
+      setNewKey('');
+    } else {
+      setError(validationError || 'API key không hợp lệ.');
+    }
   };
   
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg border border-slate-700 m-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg border border-slate-700 m-4 flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="p-6 border-b border-slate-700 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <KeyIcon className="w-6 h-6 text-sky-400" />
+            <KeyIcon className="w-6 h-6 text-primary-400" />
             <h2 className="text-xl font-semibold text-slate-100">Quản lý API & Models</h2>
           </div>
           <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
@@ -47,7 +67,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
           {/* Add new key form */}
           <div className="space-y-3">
             <h3 className="font-medium text-slate-300">Thêm Key Mới</h3>
@@ -55,7 +75,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
               <select
                 value={provider}
                 onChange={(e) => setProvider(e.target.value as ApiProviderType)}
-                className="bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200 flex-shrink-0"
+                className="bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 flex-shrink-0"
               >
                 <option value="gemini">Gemini</option>
                 <option value="openai">OpenAI</option>
@@ -65,14 +85,15 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
                 value={newKey}
                 onChange={(e) => setNewKey(e.target.value)}
                 placeholder="Dán API key của bạn vào đây"
-                className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200"
+                className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
               />
               <button
                 onClick={handleAddKey}
-                className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105 duration-200"
+                disabled={isVerifying}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:cursor-wait"
               >
-                <PlusIcon className="w-5 h-5" />
-                <span className="hidden sm:inline">Thêm</span>
+                {isVerifying ? <Spinner /> : <PlusIcon className="w-5 h-5" />}
+                <span className="sm:inline">{isVerifying ? "Đang kiểm tra..." : (provider === 'gemini' ? "Kiểm tra & Thêm" : "Thêm")}</span>
               </button>
             </div>
              {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
@@ -86,7 +107,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
              ) : (
                 <div className="space-y-2">
                     {apiKeys.map(key => (
-                        <div key={key.id} className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activeApiKey?.id === key.id ? 'bg-sky-500/10' : 'bg-slate-700/50'}`}>
+                        <div key={key.id} className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${activeApiKey?.id === key.id ? 'bg-primary-500/10' : 'bg-slate-700/50'}`}>
                             <div className="flex-grow">
                                 <p className="font-semibold text-slate-100">{key.displayName}</p>
                                 <p className="text-xs text-slate-400">{key.provider.charAt(0).toUpperCase() + key.provider.slice(1)}</p>
@@ -97,7 +118,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
                                     Đang hoạt động
                                 </span>
                             ) : (
-                                <button onClick={() => setActiveApiKeyId(key.id)} className="text-sm font-medium text-sky-400 hover:text-sky-300 transition-colors whitespace-nowrap px-3 py-1 rounded-md hover:bg-sky-500/10">
+                                <button onClick={() => setActiveApiKeyId(key.id)} className="text-sm font-medium text-primary-400 hover:text-primary-300 transition-colors whitespace-nowrap px-3 py-1 rounded-md hover:bg-primary-500/10">
                                     Kích hoạt
                                 </button>
                             )}
@@ -122,7 +143,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
                   id="gemini-model-select"
                   value={selectedModels.gemini}
                   onChange={(e) => selectModel('gemini', e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
                 >
                   {AVAILABLE_MODELS.gemini.map(model => (
                     <option key={model} value={model}>{model}</option>
@@ -137,7 +158,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
                   id="openai-model-select"
                   value={selectedModels.openai}
                   onChange={(e) => selectModel('openai', e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
                 >
                   {AVAILABLE_MODELS.openai.map(model => (
                     <option key={model} value={model}>{model}</option>
@@ -146,7 +167,14 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-
+        </div>
+        <div className="p-4 bg-slate-800/50 border-t border-slate-700 flex justify-end">
+             <button
+                onClick={onClose}
+                className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200"
+            >
+                Đóng
+            </button>
         </div>
       </div>
     </div>

@@ -95,8 +95,8 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const { 
-    activeApiKey, 
-    selectedModelForActiveProvider
+    activeApiKey,
+    executeApiCall
   } = useApi();
 
   const handleExcelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +107,7 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeApiKey || !selectedModelForActiveProvider) {
+    if (!activeApiKey) {
       setError('Vui lòng kích hoạt một API key và chọn model trong phần Quản lý API.');
       return;
     }
@@ -132,12 +132,13 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
         allSheetsData += `\n--- END OF SHEET: ${sheetName} ---\n\n`;
       });
       
-      const result = await analyzeCompetitorData(ANALYSIS_PROMPT, allSheetsData, activeApiKey.key, selectedModelForActiveProvider);
+      // Use the context's executeApiCall which handles retries and key switching
+      const result = await executeApiCall(analyzeCompetitorData, ANALYSIS_PROMPT, allSheetsData);
       setResult(result);
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi xử lý file. Vui lòng thử lại.';
-      setError(`Lỗi: ${errorMessage}. Hãy kiểm tra lại API key của bạn.`);
+      setError(`Lỗi: ${errorMessage}.`);
     } finally {
       setLoading(false);
     }
@@ -163,7 +164,7 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
         <button
           type="submit"
           disabled={!excelFile || !activeApiKey}
-          className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:transform-none"
         >
           <ChartBarIcon className="w-5 h-5" />
           Phân Tích

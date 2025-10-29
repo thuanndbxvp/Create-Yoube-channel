@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ApiProvider } from './contexts/ApiContext';
+import { SessionProvider } from './contexts/SessionContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,7 +14,11 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <ApiProvider>
-      <App />
+      <SessionProvider>
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
+      </SessionProvider>
     </ApiProvider>
   </React.StrictMode>
 );

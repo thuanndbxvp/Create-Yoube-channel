@@ -11,6 +11,10 @@ interface ApiContextType {
   selectModel: (provider: ApiProviderType, model: string) => void;
   selectedModelForActiveProvider: string | undefined;
   availableModelsForActiveProvider: string[];
+  executeApiCall: <T extends any[], R>(
+    apiFunction: (...args: [...T, string, string]) => Promise<R>,
+    ...args: T
+  ) => Promise<R>;
 }
 
 const ApiContext = createContext<ApiContextType | undefined>(undefined);
@@ -101,7 +105,11 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const activeApiKey = useMemo(() => {
     if (!activeApiKeyId) return null;
-    const key = apiKeys.find(k => k.id === activeApiKeyId);
+    let key = apiKeys.find(k => k.id === activeApiKeyId);
+    if (!key && apiKeys.length > 0) {
+      key = apiKeys[0];
+      setActiveApiKeyIdState(key.id);
+    }
     if (!key) {
         setActiveApiKeyIdState(null);
         return null;
@@ -119,6 +127,54 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return AVAILABLE_MODELS[activeApiKey.provider] || [];
   }, [activeApiKey]);
 
+  const executeApiCall = useCallback(async <T extends any[], R>(
+    apiFunction: (...args: [...T, string, string]) => Promise<R>,
+    ...args: T
+  ): Promise<R> => {
+    if (!activeApiKey || !selectedModelForActiveProvider) {
+      throw new Error("Vui lòng kích hoạt một API key và chọn model trong phần Quản lý API.");
+    }
+
+    const provider = activeApiKey.provider;
+    const keysForProvider = apiKeys.filter(k => k.provider === provider);
+    if (keysForProvider.length === 0) {
+      throw new Error(`Không tìm thấy API key nào cho ${provider}.`);
+    }
+
+    let startIndex = keysForProvider.findIndex(k => k.id === activeApiKey.id);
+    if (startIndex === -1) startIndex = 0;
+
+    for (let i = 0; i < keysForProvider.length; i++) {
+      const keyIndex = (startIndex + i) % keysForProvider.length;
+      const currentKey = keysForProvider[keyIndex];
+      const model = selectedModels[provider];
+
+      if (!model) {
+        throw new Error(`Không tìm thấy model nào được chọn cho ${provider}.`);
+      }
+
+      try {
+        console.log(`Attempting API call with key: ${currentKey.displayName}`);
+        const result = await apiFunction(...args, currentKey.key, model);
+        
+        if (currentKey.id !== activeApiKey.id) {
+            console.log(`API call successful. Switching active key to: ${currentKey.displayName}`);
+            setActiveApiKeyId(currentKey.id);
+        }
+        return result;
+      } catch (error) {
+        console.warn(`API call failed for key ${currentKey.displayName}:`, error);
+        if (i === keysForProvider.length - 1) {
+          // This was the last key, throw the final error
+          throw new Error(`Tất cả API keys cho ${provider} đều thất bại. Lỗi cuối cùng: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    }
+    // This should not be reachable, but as a fallback:
+    throw new Error(`Tất cả API keys cho ${provider} đều thất bại.`);
+
+  }, [apiKeys, activeApiKey, selectedModelForActiveProvider, selectedModels, setActiveApiKeyId]);
+
 
   const value = {
     apiKeys,
@@ -130,6 +186,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     selectModel,
     selectedModelForActiveProvider,
     availableModelsForActiveProvider,
+    executeApiCall,
   };
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
