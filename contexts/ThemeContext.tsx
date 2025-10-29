@@ -66,12 +66,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
       const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME);
-      return (storedTheme as Theme) || 'sky';
+      return (storedTheme as Theme) || 'orange';
     } catch (error) {
-      // FIX: The original code failed silently. Added console.error to log potential issues with localStorage access, which can occur in certain browser environments (e.g., private mode).
-      // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'. Using template literal to coerce error to string.
-      console.error(`Failed to read theme from localStorage: ${error}`);
-      return 'sky';
+      // FIX: The error object is of type 'unknown' and must be explicitly converted to a string to be used in a template literal.
+      console.error(`Failed to read theme from localStorage: ${String(error)}`);
+      return 'orange';
     }
   });
 

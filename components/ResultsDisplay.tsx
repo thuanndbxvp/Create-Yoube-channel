@@ -45,15 +45,17 @@ const IdeaCard: React.FC<{ idea: ChannelIdeaSet; index: number }> = ({ idea, ind
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-700">
-          <div>
-            <h4 className="font-semibold text-slate-300 mb-1">Ý tưởng Banner</h4>
-            <p className="text-slate-400 text-sm italic mb-2">{idea.bannerIdea}</p>
-            {idea.bannerIdea_vi && <p className="mb-2 text-sm text-slate-500 italic border-l-2 border-slate-600 pl-2">Giải thích: {idea.bannerIdea_vi}</p>}
-            <div className="relative">
+          <div className="flex flex-col">
+            <div>
+              <h4 className="font-semibold text-slate-300 mb-1">Ý tưởng Banner</h4>
+              <p className="text-slate-400 text-sm italic mb-2">{idea.bannerIdea}</p>
+              {idea.bannerIdea_vi && <p className="mb-2 text-sm text-slate-500 italic border-l-2 border-slate-600 pl-2">Giải thích: {idea.bannerIdea_vi}</p>}
+            </div>
+            <div className="relative mt-auto pt-2">
               <pre className="bg-slate-800 p-3 rounded-md text-sm text-slate-300 overflow-x-auto font-mono"><code>{idea.bannerPrompt}</code></pre>
               <button 
                 onClick={() => copyToClipboard(idea.bannerPrompt, 'banner')} 
-                className={`absolute top-2 right-2 p-1.5 rounded-md transition-colors ${
+                className={`absolute top-4 right-2 p-1.5 rounded-md transition-colors ${
                   copied === 'banner' 
                   ? 'bg-green-600 text-white' 
                   : 'bg-slate-600 hover:bg-slate-500 text-slate-200'
@@ -64,15 +66,17 @@ const IdeaCard: React.FC<{ idea: ChannelIdeaSet; index: number }> = ({ idea, ind
               </button>
             </div>
           </div>
-          <div>
-            <h4 className="font-semibold text-slate-300 mb-1">Ý tưởng Logo</h4>
-            <p className="text-slate-400 text-sm italic mb-2">{idea.logoIdea}</p>
-            {idea.logoIdea_vi && <p className="mb-2 text-sm text-slate-500 italic border-l-2 border-slate-600 pl-2">Giải thích: {idea.logoIdea_vi}</p>}
-             <div className="relative">
+          <div className="flex flex-col">
+            <div>
+              <h4 className="font-semibold text-slate-300 mb-1">Ý tưởng Logo</h4>
+              <p className="text-slate-400 text-sm italic mb-2">{idea.logoIdea}</p>
+              {idea.logoIdea_vi && <p className="mb-2 text-sm text-slate-500 italic border-l-2 border-slate-600 pl-2">Giải thích: {idea.logoIdea_vi}</p>}
+            </div>
+            <div className="relative mt-auto pt-2">
               <pre className="bg-slate-800 p-3 rounded-md text-sm text-slate-300 overflow-x-auto font-mono"><code>{idea.logoPrompt}</code></pre>
                <button 
                 onClick={() => copyToClipboard(idea.logoPrompt, 'logo')} 
-                className={`absolute top-2 right-2 p-1.5 rounded-md transition-colors ${
+                className={`absolute top-4 right-2 p-1.5 rounded-md transition-colors ${
                   copied === 'logo' 
                   ? 'bg-green-600 text-white' 
                   : 'bg-slate-600 hover:bg-slate-500 text-slate-200'
