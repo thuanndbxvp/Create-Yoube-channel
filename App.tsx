@@ -11,13 +11,18 @@ import ThemeSelector from './components/ThemeSelector';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.GENERATOR);
-  const [loading, setLoading] = useState<boolean>(false);
   
-  // State is now separated for each tab to preserve results
+  // State is now fully separated for each tab to preserve results and loading states
+  const [generatorLoading, setGeneratorLoading] = useState<boolean>(false);
+  const [analyzerLoading, setAnalyzerLoading] = useState<boolean>(false);
   const [generatorResult, setGeneratorResult] = useState<ResultData>(null);
   const [analyzerResult, setAnalyzerResult] = useState<ResultData>(null);
   const [generatorError, setGeneratorError] = useState<string | null>(null);
   const [analyzerError, setAnalyzerError] = useState<string | null>(null);
+  
+  // Lifted state for session naming
+  const [generatorInputIdea, setGeneratorInputIdea] = useState<string>('');
+  const [analyzerInputFileName, setAnalyzerInputFileName] = useState<string>('');
 
   const [isApiManagerOpen, setIsApiManagerOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -37,13 +42,24 @@ const App: React.FC = () => {
   
   const handleTabChange = (tab: AppTab) => {
     setActiveTab(tab);
-    // No longer resetting state on tab change
   }
 
   const handleSaveSession = () => {
     const resultToSave = activeTab === AppTab.GENERATOR ? generatorResult : analyzerResult;
     if (!resultToSave) return;
-    const sessionName = `${activeTab === AppTab.GENERATOR ? 'Ý tưởng' : 'Phân tích'} - ${new Date().toLocaleString('vi-VN')}`;
+    
+    let sessionName = '';
+    const timestamp = new Date().toLocaleString('vi-VN');
+
+    if (activeTab === AppTab.GENERATOR) {
+        const keywords = generatorInputIdea.trim().split(/\s+/).slice(0, 5).join(' ');
+        const keywordPart = keywords ? `"${keywords}..."` : 'Ý tưởng chưa đặt tên';
+        sessionName = `Ý tưởng: ${keywordPart} - ${timestamp}`;
+    } else {
+        const fileNamePart = analyzerInputFileName || 'File phân tích';
+        sessionName = `Phân tích: ${fileNamePart} - ${timestamp}`;
+    }
+    
     saveSession(sessionName, activeTab, resultToSave);
     
     setIsSessionSaved(true);
@@ -57,21 +73,31 @@ const App: React.FC = () => {
     if (session.type === AppTab.GENERATOR) {
       setGeneratorResult(session.data);
       setGeneratorError(null);
+      setGeneratorLoading(false); // Stop loading for this tab only
     } else {
       setAnalyzerResult(session.data);
       setAnalyzerError(null);
+      setAnalyzerLoading(false); // Stop loading for this tab only
     }
-    setLoading(false);
     setIsLibraryOpen(false);
   };
 
+  const currentLoading = activeTab === AppTab.GENERATOR ? generatorLoading : analyzerLoading;
   const currentResult = activeTab === AppTab.GENERATOR ? generatorResult : analyzerResult;
   const currentError = activeTab === AppTab.GENERATOR ? generatorError : analyzerError;
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative">
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10 flex items-center gap-2">
-        {currentResult && !loading && (
+        <button
+          onClick={() => setIsLibraryOpen(true)}
+          className="flex-shrink-0 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
+          title="Thư viện"
+        >
+          <LibraryIcon className="w-5 h-5" />
+          <span className="hidden sm:inline">Thư viện</span>
+        </button>
+        {currentResult && !currentLoading && (
             <button
               onClick={handleSaveSession}
               disabled={isSessionSaved}
@@ -95,14 +121,6 @@ const App: React.FC = () => {
               )}
             </button>
         )}
-        <button
-          onClick={() => setIsLibraryOpen(true)}
-          className="flex-shrink-0 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
-          title="Thư viện"
-        >
-          <LibraryIcon className="w-5 h-5" />
-          <span className="hidden sm:inline">Thư viện</span>
-        </button>
       </div>
       
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10 flex items-center gap-2">
@@ -162,13 +180,25 @@ const App: React.FC = () => {
           
           <div className="bg-slate-800 rounded-xl shadow-lg p-6 min-h-[200px]">
             {activeTab === AppTab.GENERATOR ? (
-              <IdeaGenerator setLoading={setLoading} setResult={setGeneratorResult} setError={setGeneratorError} handleReset={() => handleReset(AppTab.GENERATOR)} />
+              <IdeaGenerator 
+                setLoading={setGeneratorLoading} 
+                setResult={setGeneratorResult} 
+                setError={setGeneratorError} 
+                handleReset={() => handleReset(AppTab.GENERATOR)} 
+                setGeneratorInputIdea={setGeneratorInputIdea}
+              />
             ) : (
-              <CompetitorAnalyzer setLoading={setLoading} setResult={setAnalyzerResult} setError={setAnalyzerError} handleReset={() => handleReset(AppTab.ANALYZER)} />
+              <CompetitorAnalyzer 
+                setLoading={setAnalyzerLoading} 
+                setResult={setAnalyzerResult} 
+                setError={setAnalyzerError} 
+                handleReset={() => handleReset(AppTab.ANALYZER)} 
+                setAnalyzerInputFileName={setAnalyzerInputFileName}
+              />
             )}
           </div>
 
-          <ResultsDisplay loading={loading} error={currentError} result={currentResult} />
+          <ResultsDisplay loading={currentLoading} error={currentError} result={currentResult} />
 
         </main>
       </div>

@@ -9,9 +9,10 @@ interface IdeaGeneratorProps {
   setResult: (result: ResultData) => void;
   setError: (error: string | null) => void;
   handleReset: () => void;
+  setGeneratorInputIdea: (idea: string) => void;
 }
 
-const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, setError, handleReset }) => {
+const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, setError, handleReset, setGeneratorInputIdea }) => {
   const [idea, setIdea] = useState<string>('');
   const [language, setLanguage] = useState<string>('en-US');
   const [numResults, setNumResults] = useState<number>(5);
@@ -58,7 +59,10 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
           value={idea}
-          onChange={(e) => setIdea(e.target.value)}
+          onChange={(e) => {
+            setIdea(e.target.value);
+            setGeneratorInputIdea(e.target.value);
+          }}
           placeholder="Ví dụ: một kênh về làm bánh mì tại nhà cho người mới bắt đầu..."
           className="w-full h-32 p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 resize-none"
         />

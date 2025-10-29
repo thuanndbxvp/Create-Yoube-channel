@@ -11,6 +11,7 @@ interface CompetitorAnalyzerProps {
   setResult: (result: ResultData) => void;
   setError: (error: string | null) => void;
   handleReset: () => void;
+  setAnalyzerInputFileName: (name: string) => void;
 }
 
 const ANALYSIS_PROMPT = `Bạn là chuyên gia YouTube Data & Strategy. Hãy đọc file Excel có nhiều sheet (mỗi sheet là dữ liệu 1 kênh với các cột: Tên video, Mô tả, Thời lượng, Lượt xem, Like, URL). Phân tích từng sheet, so sánh các kênh, tìm mô hình nội dung hiệu quả, đề xuất chiến lược, gói brand, 24 chủ đề trend, công thức sản xuất và hướng phát triển cho kênh của người dùng.
@@ -91,7 +92,7 @@ const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     });
 };
 
-const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, setResult, setError, handleReset }) => {
+const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, setResult, setError, handleReset, setAnalyzerInputFileName }) => {
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const { 
@@ -100,8 +101,10 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
   } = useApi();
 
   const handleExcelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setExcelFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setExcelFile(file);
+      setAnalyzerInputFileName(file.name);
     }
   };
 
