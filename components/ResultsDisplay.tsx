@@ -174,10 +174,16 @@ const SimpleHorizontalBarChart: React.FC<{ data: { label: string; value: number;
     );
 };
 
-// Main Analysis Rendering Logic
-const renderAnalysisResult = (markdownText: string) => {
+// Main Analysis Rendering Logic as a Component to handle its own state
+const AnalysisResult: React.FC<{ markdownText: string }> = ({ markdownText }) => {
     const sections = markdownText.trim().split(/\n(?=##\s)/);
     const [copied, setCopied] = useState(false);
+    // State to manage collapsible main sections. First section is open by default.
+    const [openSections, setOpenSections] = useState<Record<number, boolean>>({ 0: true });
+
+    const toggleSection = (index: number) => {
+        setOpenSections(prev => ({ ...prev, [index]: !(prev[index] ?? false) }));
+    };
 
     const copyReportToClipboard = () => {
         navigator.clipboard.writeText(markdownText).then(() => {
@@ -238,7 +244,7 @@ const renderAnalysisResult = (markdownText: string) => {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 className="text-2xl font-bold text-center text-slate-100">Kết Quả Phân Tích Chi Tiết</h2>
                 <button 
@@ -258,6 +264,7 @@ const renderAnalysisResult = (markdownText: string) => {
                 const { icon, title, restOfContent } = getIconAndTitle(section);
                 let chartElement: React.ReactNode = null;
                 let customContent: React.ReactNode = null;
+                const isOpen = openSections[index] ?? false;
 
                 if (title.toLowerCase().includes('so sánh chéo')) {
                     const tableData = parseComparisonTable(restOfContent);
@@ -305,17 +312,26 @@ const renderAnalysisResult = (markdownText: string) => {
                 }
 
                 return (
-                    <div key={index} className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
-                        <div className="flex items-center gap-4 mb-4">
-                           {icon && <div className="text-primary-400 flex-shrink-0">{icon}</div>}
-                           <h2 className="text-xl font-bold text-slate-100">{title}</h2>
-                        </div>
-                        {chartElement}
-                        {customContent ? customContent : (
-                            <div 
-                                className="prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 prose-a:text-primary-400 hover:prose-a:text-primary-300 prose-table:border-collapse prose-table:w-full prose-thead:border-b prose-thead:border-slate-600 prose-th:p-2 prose-th:text-left prose-th:font-semibold prose-tbody:divide-y prose-tbody:divide-slate-700 prose-td:p-2 prose-td:align-baseline prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono prose-hr:border-slate-700 prose-p:first:mt-0 prose-ul:first:mt-0 prose-ol:first:mt-0 prose-table:first:mt-0 prose-h3:first:mt-0 prose-h4:first:mt-0"
-                                dangerouslySetInnerHTML={{ __html: marked.parse(restOfContent) }} 
-                            />
+                    <div key={index} className="bg-slate-900/50 rounded-lg border border-slate-700">
+                        <button onClick={() => toggleSection(index)} className="w-full flex items-center justify-between p-4 sm:p-6 text-left transition-colors hover:bg-slate-800/50">
+                            <div className="flex items-center gap-4 flex-grow">
+                               {icon && <div className="text-primary-400 flex-shrink-0">{icon}</div>}
+                               <h2 className="text-xl font-bold text-slate-100">{title}</h2>
+                            </div>
+                            <div className="text-slate-400 flex-shrink-0 ml-4">
+                                {isOpen ? <MinusIcon className="w-6 h-6" /> : <PlusIcon className="w-6 h-6" />}
+                            </div>
+                        </button>
+                        {isOpen && (
+                            <div className="px-4 sm:px-6 pb-6 pt-4 border-t border-slate-700">
+                                {chartElement}
+                                {customContent ? customContent : (
+                                    <div 
+                                        className="prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 prose-a:text-primary-400 hover:prose-a:text-primary-300 prose-table:border-collapse prose-table:w-full prose-thead:border-b prose-thead:border-slate-600 prose-th:p-2 prose-th:text-left prose-th:font-semibold prose-tbody:divide-y prose-tbody:divide-slate-700 prose-td:p-2 prose-td:align-baseline prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono prose-hr:border-slate-700 prose-p:first:mt-0 prose-ul:first:mt-0 prose-ol:first:mt-0 prose-table:first:mt-0 prose-h3:first:mt-0 prose-h4:first:mt-0"
+                                        dangerouslySetInnerHTML={{ __html: marked.parse(restOfContent) }} 
+                                    />
+                                )}
+                            </div>
                         )}
                     </div>
                 );
@@ -351,7 +367,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ loading, error, result 
     <div className="mt-8 p-6 bg-slate-800 rounded-xl shadow-lg animate-fade-in">
         {isChannelIdeaSets(result) 
             ? renderChannelIdeaSets(result)
-            : renderAnalysisResult(result as string)
+            : <AnalysisResult markdownText={result as string} />
         }
     </div>
   );
