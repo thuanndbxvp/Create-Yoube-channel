@@ -9,6 +9,9 @@ interface ResultsDisplayProps {
   result: ResultData;
 }
 
+// Make TypeScript aware of the `marked` library loaded from the CDN
+declare var marked: any;
+
 const renderChannelAssets = (assets: ChannelAssets) => (
   <div className="space-y-6">
     <div>
@@ -65,21 +68,40 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ loading, error, result 
     return res !== null && typeof res === 'object' && 'channelNames' in res;
   };
 
+  const renderAnalysisResult = (markdownText: string) => {
+    // Sanitize option is recommended for security if the content can be user-generated
+    // but for AI-generated content we trust, we can proceed.
+    const htmlContent = marked.parse(markdownText);
+    return (
+        <div>
+            <h3 className="text-xl font-semibold text-sky-400 mb-4">Kết Quả Phân Tích Chi Tiết</h3>
+            <div 
+                className="prose prose-invert max-w-none 
+                           prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-sky-400 
+                           prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 
+                           prose-a:text-sky-400 hover:prose-a:text-sky-300
+                           prose-table:border-collapse prose-table:w-full
+                           prose-thead:border-b prose-thead:border-slate-600
+                           prose-th:p-2 prose-th:text-left prose-th:font-semibold
+                           prose-tbody:divide-y prose-tbody:divide-slate-700
+                           prose-td:p-2 prose-td:align-baseline
+                           prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono
+                           "
+                dangerouslySetInnerHTML={{ __html: htmlContent }} 
+            />
+        </div>
+    );
+  };
+
+
   return (
     <div className="mt-8 p-6 bg-slate-800 rounded-xl shadow-lg animate-fade-in">
-        {isChannelAssets(result) ? (
-            renderChannelAssets(result)
-        ) : (
-            <div>
-                 <h3 className="text-lg font-semibold text-sky-400 mb-4">Kết Quả Phân Tích</h3>
-                 <div className="prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-sky-400 prose-ul:list-disc prose-li:text-slate-300 prose-a:text-sky-400 hover:prose-a:text-sky-300">
-                    <pre className="whitespace-pre-wrap bg-slate-900/50 p-4 rounded-md text-slate-300 text-sm leading-relaxed font-sans">{result}</pre>
-                 </div>
-            </div>
-        )}
+        {isChannelAssets(result) 
+            ? renderChannelAssets(result)
+            : renderAnalysisResult(result as string)
+        }
     </div>
   );
 };
 
 export default ResultsDisplay;
-
