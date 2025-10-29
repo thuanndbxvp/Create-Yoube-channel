@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { ResultData, ChannelIdeaSet } from '../types';
 import Spinner from './Spinner';
-import { CopyIcon, CheckIcon } from './icons';
+import { 
+    CopyIcon, CheckIcon, ChartBarIcon, MagnifyingGlassIcon, ScaleIcon, CompassIcon, 
+    CogIcon, FireIcon, PaletteIcon, CalendarIcon, BookOpenIcon 
+} from './icons';
 
 interface ResultsDisplayProps {
   loading: boolean;
@@ -130,20 +133,44 @@ const renderChannelIdeaSets = (sets: ChannelIdeaSet[]) => (
 );
 
 const renderAnalysisResult = (markdownText: string) => {
-    // Split the markdown into sections based on H2 headings (##)
     const sections = markdownText.trim().split(/\n(?=##\s)/);
 
+    const getIconAndTitle = (section: string): { icon: React.ReactNode, title: string, restOfContent: string } => {
+        const lines = section.trim().split('\n');
+        const titleLine = lines.shift()?.replace(/^[#📈📊⚔️🧭⚙️🔥🎨📅📚\s]*/, '') || '';
+        const restOfContent = lines.join('\n');
+        
+        const lowerTitle = titleLine.toLowerCase();
+        let icon: React.ReactNode = null;
+
+        if (lowerTitle.includes('tổng quan')) icon = <ChartBarIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('phân tích chi tiết')) icon = <MagnifyingGlassIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('so sánh chéo')) icon = <ScaleIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('hướng nội dung')) icon = <CompassIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('công thức sản xuất')) icon = <CogIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('chủ đề video')) icon = <FireIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('gói brand')) icon = <PaletteIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('lộ trình')) icon = <CalendarIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('biểu đồ')) icon = <ChartBarIcon className="w-7 h-7" />;
+        else if (lowerTitle.includes('phụ lục')) icon = <BookOpenIcon className="w-7 h-7" />;
+        
+        return { icon, title: titleLine, restOfContent };
+    };
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <h2 className="text-2xl font-bold text-center text-slate-100">Kết Quả Phân Tích Chi Tiết</h2>
             {sections.map((section, index) => {
-                // Add horizontal rules before H3s within a section for further separation
-                const sectionWithSeparators = section.replace(/\n(###\s)/g, '\n<hr class="my-6 border-slate-700"/>\n$1');
-                
+                const { icon, title, restOfContent } = getIconAndTitle(section);
+                const sectionWithSeparators = restOfContent.replace(/\n(###\s)/g, '\n<hr class="my-6 border-slate-700"/>\n$1');
                 const htmlContent = marked.parse(sectionWithSeparators);
 
                 return (
                     <div key={index} className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
+                        <div className="flex items-center gap-4 mb-4">
+                           {icon && <div className="text-primary-400 flex-shrink-0">{icon}</div>}
+                           <h2 className="text-xl font-bold text-slate-100">{title}</h2>
+                        </div>
                         <div 
                             className="prose prose-invert max-w-none 
                                        prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 
@@ -155,7 +182,9 @@ const renderAnalysisResult = (markdownText: string) => {
                                        prose-tbody:divide-y prose-tbody:divide-slate-700
                                        prose-td:p-2 prose-td:align-baseline
                                        prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono
-                                       prose-hr:border-slate-700"
+                                       prose-hr:border-slate-700
+                                       prose-p:first:mt-0 prose-ul:first:mt-0 prose-ol:first:mt-0 
+                                       prose-table:first:mt-0 prose-h3:first:mt-0 prose-h4:first:mt-0"
                             dangerouslySetInnerHTML={{ __html: htmlContent }} 
                         />
                     </div>
