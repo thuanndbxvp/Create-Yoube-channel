@@ -64,7 +64,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative">
-       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10 flex items-center gap-2">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10 flex items-center gap-2">
         {currentResult && !loading && (
             <button
               onClick={handleSaveSession}
@@ -75,7 +75,6 @@ const App: React.FC = () => {
               <span className="hidden sm:inline">Lưu Phiên</span>
             </button>
         )}
-        <ThemeSelector />
         <button
           onClick={() => setIsLibraryOpen(true)}
           className="flex-shrink-0 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
@@ -84,6 +83,10 @@ const App: React.FC = () => {
           <LibraryIcon className="w-5 h-5" />
           <span className="hidden sm:inline">Thư viện</span>
         </button>
+      </div>
+      
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 z-10 flex items-center gap-2">
+        <ThemeSelector />
         <button
           onClick={() => setIsApiManagerOpen(true)}
           className="flex-shrink-0 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"

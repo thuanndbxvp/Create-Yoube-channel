@@ -62,14 +62,14 @@ const channelIdeaSetSchema = {
 const finalSchema = {
     type: Type.ARRAY,
     items: channelIdeaSetSchema,
-    description: "Một danh sách gồm 3 đến 5 bộ ý tưởng kênh hoàn chỉnh."
+    description: "Một danh sách các bộ ý tưởng kênh hoàn chỉnh."
 }
 
 
 // FIX: Updated the function to align with the application's architecture.
 // It now accepts language, apiKey, and model, returns an array of ChannelIdeaSet,
 // and uses an updated prompt and schema to generate multiple ideas.
-export const generateChannelAssets = async (idea: string, language: string, apiKey: string, model: string): Promise<ChannelIdeaSet[]> => {
+export const generateChannelAssets = async (idea: string, language: string, numResults: number, apiKey: string, model: string): Promise<ChannelIdeaSet[]> => {
   if (!apiKey) throw new Error("API Key is required.");
   
   const ai = new GoogleGenAI({ apiKey });
@@ -80,7 +80,7 @@ export const generateChannelAssets = async (idea: string, language: string, apiK
     ? `4.  **Chú thích Tiếng Việt:** Vì ngôn ngữ được chọn không phải là tiếng Việt, hãy cung cấp thêm một phần giải thích ngắn gọn bằng tiếng Việt cho các mục sau: 'channelName_vi', 'description_vi', 'bannerIdea_vi', 'logoIdea_vi'.`
     : '';
 
-  const prompt = `Bạn là một chuyên gia sáng tạo và chiến lược xây dựng kênh YouTube. Dựa trên ý tưởng sau đây, hãy tạo ra 3 đến 5 bộ ý tưởng kênh hoàn chỉnh và riêng biệt.
+  const prompt = `Bạn là một chuyên gia sáng tạo và chiến lược xây dựng kênh YouTube. Dựa trên ý tưởng sau đây, hãy tạo ra ${numResults} bộ ý tưởng kênh hoàn chỉnh và riêng biệt.
 Đối với mỗi bộ ý tưởng, hãy cung cấp đầy đủ các thông tin theo cấu trúc JSON được yêu cầu.
 
 Yêu cầu quan trọng:

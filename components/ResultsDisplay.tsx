@@ -45,8 +45,8 @@ const IdeaCard: React.FC<{ idea: ChannelIdeaSet; index: number }> = ({ idea, ind
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-700">
-          <div className="flex flex-col">
-            <div>
+          <div className="flex flex-col flex-grow">
+            <div className="flex-grow">
               <h4 className="font-semibold text-slate-300 mb-1">Ý tưởng Banner</h4>
               <p className="text-slate-400 text-sm italic mb-2">{idea.bannerIdea}</p>
               {idea.bannerIdea_vi && <p className="mb-2 text-sm text-slate-500 italic border-l-2 border-slate-600 pl-2">Giải thích: {idea.bannerIdea_vi}</p>}
@@ -66,8 +66,8 @@ const IdeaCard: React.FC<{ idea: ChannelIdeaSet; index: number }> = ({ idea, ind
               </button>
             </div>
           </div>
-          <div className="flex flex-col">
-            <div>
+          <div className="flex flex-col flex-grow">
+            <div className="flex-grow">
               <h4 className="font-semibold text-slate-300 mb-1">Ý tưởng Logo</h4>
               <p className="text-slate-400 text-sm italic mb-2">{idea.logoIdea}</p>
               {idea.logoIdea_vi && <p className="mb-2 text-sm text-slate-500 italic border-l-2 border-slate-600 pl-2">Giải thích: {idea.logoIdea_vi}</p>}
@@ -103,24 +103,37 @@ const renderChannelIdeaSets = (sets: ChannelIdeaSet[]) => (
 );
 
 const renderAnalysisResult = (markdownText: string) => {
-    const htmlContent = marked.parse(markdownText);
+    // Split the markdown into sections based on H2 headings (##)
+    const sections = markdownText.trim().split(/\n(?=##\s)/);
+
     return (
-        <div>
-            <h3 className="text-xl font-semibold text-primary-400 mb-4">Kết Quả Phân Tích Chi Tiết</h3>
-            <div 
-                className="prose prose-invert max-w-none 
-                           prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 
-                           prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 
-                           prose-a:text-primary-400 hover:prose-a:text-primary-300
-                           prose-table:border-collapse prose-table:w-full
-                           prose-thead:border-b prose-thead:border-slate-600
-                           prose-th:p-2 prose-th:text-left prose-th:font-semibold
-                           prose-tbody:divide-y prose-tbody:divide-slate-700
-                           prose-td:p-2 prose-td:align-baseline
-                           prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono
-                           "
-                dangerouslySetInnerHTML={{ __html: htmlContent }} 
-            />
+        <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-center text-slate-100">Kết Quả Phân Tích Chi Tiết</h2>
+            {sections.map((section, index) => {
+                // Add horizontal rules before H3s within a section for further separation
+                const sectionWithSeparators = section.replace(/\n(###\s)/g, '\n<hr class="my-6 border-slate-700"/>\n$1');
+                
+                const htmlContent = marked.parse(sectionWithSeparators);
+
+                return (
+                    <div key={index} className="bg-slate-900/50 rounded-lg p-6 border border-slate-700">
+                        <div 
+                            className="prose prose-invert max-w-none 
+                                       prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-primary-400 
+                                       prose-ul:list-disc prose-li:my-1 prose-li:text-slate-300 
+                                       prose-a:text-primary-400 hover:prose-a:text-primary-300
+                                       prose-table:border-collapse prose-table:w-full
+                                       prose-thead:border-b prose-thead:border-slate-600
+                                       prose-th:p-2 prose-th:text-left prose-th:font-semibold
+                                       prose-tbody:divide-y prose-tbody:divide-slate-700
+                                       prose-td:p-2 prose-td:align-baseline
+                                       prose-code:bg-slate-700 prose-code:rounded prose-code:p-1 prose-code:text-sm prose-code:font-mono
+                                       prose-hr:border-slate-700"
+                            dangerouslySetInnerHTML={{ __html: htmlContent }} 
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 };
