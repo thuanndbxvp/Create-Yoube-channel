@@ -68,9 +68,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME);
       return (storedTheme as Theme) || 'orange';
     } catch (error) {
-      // FIX: The error object in a catch block is of type 'unknown' and cannot be directly used in a template literal.
-      // Passing it as a separate argument to console.error is a safe way to log it.
-      console.error("Failed to read theme from localStorage:", error);
+      // FIX: The error object in a catch block is of type 'unknown'. To satisfy a
+      // strict linter rule that expects a string argument, we check if the error
+      // is an Error instance to log its message; otherwise we cast it to a string.
+      if (error instanceof Error) {
+        console.error("Failed to read theme from localStorage:", error.message);
+      } else {
+        console.error("Failed to read theme from localStorage:", String(error));
+      }
       return 'orange';
     }
   });

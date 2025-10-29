@@ -19,8 +19,9 @@ const isChannelIdeaSets = (res: ResultData): res is ChannelIdeaSet[] => {
 const IdeaCard: React.FC<{ idea: ChannelIdeaSet; index: number }> = ({ idea, index }) => {
   const [copied, setCopied] = useState<string | null>(null);
 
-  const copyToClipboard = (text: string, type: 'banner' | 'logo') => {
-    navigator.clipboard.writeText(text).then(() => {
+  const copyToClipboard = (text: string | string[], type: string) => {
+    const textToCopy = Array.isArray(text) ? text.join(' ') : text;
+    navigator.clipboard.writeText(textToCopy).then(() => {
       setCopied(type);
       setTimeout(() => setCopied(null), 2000);
     });
@@ -33,12 +34,38 @@ const IdeaCard: React.FC<{ idea: ChannelIdeaSet; index: number }> = ({ idea, ind
       
       <div className="space-y-5">
         <div>
-          <h4 className="font-semibold text-slate-300 mb-1">Mô tả kênh</h4>
+          <div className="flex items-center justify-between mb-1">
+            <h4 className="font-semibold text-slate-300">Mô tả kênh</h4>
+            <button 
+              onClick={() => copyToClipboard(idea.description, 'description')} 
+              className={`p-1.5 rounded-md transition-colors ${
+                copied === 'description' 
+                ? 'bg-green-600 text-white' 
+                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              }`}
+              title={copied === 'description' ? 'Đã chép!' : 'Chép Mô tả'}
+            >
+              {copied === 'description' ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
+            </button>
+          </div>
           <p className="text-slate-400 whitespace-pre-wrap">{idea.description}</p>
           {idea.description_vi && <p className="mt-2 text-sm text-slate-500 italic border-l-2 border-slate-600 pl-2">Giải thích: {idea.description_vi}</p>}
         </div>
         <div>
-          <h4 className="font-semibold text-slate-300 mb-1">Hashtags</h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-slate-300">Hashtags</h4>
+             <button 
+                onClick={() => copyToClipboard(idea.hashtags, 'hashtags')} 
+                className={`p-1.5 rounded-md transition-colors ${
+                  copied === 'hashtags' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                }`}
+                title={copied === 'hashtags' ? 'Đã chép!' : 'Chép Hashtags'}
+              >
+                {copied === 'hashtags' ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
+              </button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {idea.hashtags.map((tag, i) => <span key={i} className="bg-slate-700 text-primary-300 text-sm font-medium px-2.5 py-1 rounded-full">{tag}</span>)}
           </div>

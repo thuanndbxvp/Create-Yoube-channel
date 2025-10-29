@@ -13,7 +13,7 @@ interface IdeaGeneratorProps {
 
 const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, setError, handleReset }) => {
   const [idea, setIdea] = useState<string>('');
-  const [language, setLanguage] = useState<string>('vi-VN');
+  const [language, setLanguage] = useState<string>('en-US');
   const [numResults, setNumResults] = useState<number>(5);
   const { 
     activeApiKey,

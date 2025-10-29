@@ -3,7 +3,7 @@ import { AppTab, ResultData, SavedSession } from './types';
 import IdeaGenerator from './components/IdeaGenerator';
 import CompetitorAnalyzer from './components/CompetitorAnalyzer';
 import ResultsDisplay from './components/ResultsDisplay';
-import { YouTubeIcon, SparklesIcon, ChartBarIcon, KeyIcon, SaveIcon, LibraryIcon } from './components/icons';
+import { YouTubeIcon, SparklesIcon, ChartBarIcon, KeyIcon, SaveIcon, LibraryIcon, CheckIcon } from './components/icons';
 import ApiKeyManager from './components/ApiKeyManager';
 import Library from './components/Library';
 import { useSession } from './contexts/SessionContext';
@@ -21,6 +21,7 @@ const App: React.FC = () => {
 
   const [isApiManagerOpen, setIsApiManagerOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [isSessionSaved, setIsSessionSaved] = useState(false);
   
   const { saveSession } = useSession();
 
@@ -44,6 +45,11 @@ const App: React.FC = () => {
     if (!resultToSave) return;
     const sessionName = `${activeTab === AppTab.GENERATOR ? 'Ý tưởng' : 'Phân tích'} - ${new Date().toLocaleString('vi-VN')}`;
     saveSession(sessionName, activeTab, resultToSave);
+    
+    setIsSessionSaved(true);
+    setTimeout(() => {
+        setIsSessionSaved(false);
+    }, 2000);
   };
 
   const handleLoadSession = (session: SavedSession) => {
@@ -68,11 +74,25 @@ const App: React.FC = () => {
         {currentResult && !loading && (
             <button
               onClick={handleSaveSession}
-              className="flex-shrink-0 flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
-              title="Lưu phiên"
+              disabled={isSessionSaved}
+              className={`flex-shrink-0 flex items-center justify-center gap-2 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 ${
+                isSessionSaved
+                  ? 'bg-green-600 cursor-default'
+                  : 'bg-primary-600 hover:bg-primary-700'
+              }`}
+              title={isSessionSaved ? "Đã lưu!" : "Lưu phiên"}
             >
-              <SaveIcon className="w-5 h-5" />
-              <span className="hidden sm:inline">Lưu Phiên</span>
+              {isSessionSaved ? (
+                <>
+                  <CheckIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">Đã lưu!</span>
+                </>
+              ) : (
+                <>
+                  <SaveIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">Lưu Phiên</span>
+                </>
+              )}
             </button>
         )}
         <button
