@@ -5,6 +5,7 @@ import { useApi } from '../contexts/ApiContext';
 import { SparklesIcon } from './icons';
 
 interface IdeaGeneratorProps {
+  ideaValue: string;
   setLoading: (loading: boolean) => void;
   setResult: (result: ResultData) => void;
   setError: (error: string | null) => void;
@@ -12,8 +13,7 @@ interface IdeaGeneratorProps {
   setGeneratorInputIdea: (idea: string) => void;
 }
 
-const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, setError, handleReset, setGeneratorInputIdea }) => {
-  const [idea, setIdea] = useState<string>('');
+const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ ideaValue, setLoading, setResult, setError, handleReset, setGeneratorInputIdea }) => {
   const [language, setLanguage] = useState<string>('en-US');
   const [numResults, setNumResults] = useState<number>(5);
   const { 
@@ -27,7 +27,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
       setError('Vui lòng kích hoạt một API key và chọn model trong phần Quản lý API.');
       return;
     }
-    if (!idea.trim()) {
+    if (!ideaValue.trim()) {
       setError('Vui lòng nhập ý tưởng của bạn.');
       return;
     }
@@ -37,7 +37,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
 
     try {
       // Use the context's executeApiCall which handles retries and key switching
-      const result = await executeApiCall(generateChannelAssets, idea, language, numResults);
+      const result = await executeApiCall(generateChannelAssets, ideaValue, language, numResults);
       setResult(result);
     } catch (err) {
       console.error(err);
@@ -58,9 +58,8 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ setLoading, setResult, se
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
-          value={idea}
+          value={ideaValue}
           onChange={(e) => {
-            setIdea(e.target.value);
             setGeneratorInputIdea(e.target.value);
           }}
           placeholder="Ví dụ: một kênh về làm bánh mì tại nhà cho người mới bắt đầu..."

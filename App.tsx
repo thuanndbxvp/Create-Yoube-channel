@@ -20,7 +20,7 @@ const App: React.FC = () => {
   const [generatorError, setGeneratorError] = useState<string | null>(null);
   const [analyzerError, setAnalyzerError] = useState<string | null>(null);
   
-  // Lifted state for session naming
+  // Lifted state for session naming and preserving input across tab switches
   const [generatorInputIdea, setGeneratorInputIdea] = useState<string>('');
   const [analyzerInputFileName, setAnalyzerInputFileName] = useState<string>('');
 
@@ -139,8 +139,10 @@ const App: React.FC = () => {
         <header className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-2">
             <YouTubeIcon className="h-12 w-12 text-red-500" />
-            <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-secondary-500">
-              Trợ lý Kênh YouTube AI
+            <h1 className="text-3xl sm:text-4xl font-bold">
+                <a href="/" className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-secondary-500 hover:opacity-80 transition-opacity duration-200 no-underline">
+                  Trợ lý Kênh YouTube AI
+                </a>
             </h1>
           </div>
           <p className="text-slate-400">
@@ -181,6 +183,7 @@ const App: React.FC = () => {
           <div className="bg-slate-800 rounded-xl shadow-lg p-6 min-h-[200px]">
             {activeTab === AppTab.GENERATOR ? (
               <IdeaGenerator 
+                ideaValue={generatorInputIdea}
                 setLoading={setGeneratorLoading} 
                 setResult={setGeneratorResult} 
                 setError={setGeneratorError} 
