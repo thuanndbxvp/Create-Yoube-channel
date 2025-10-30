@@ -17,8 +17,9 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
     addApiKey, 
     removeApiKey, 
     setActiveApiKeyId,
+    selectModel,
     selectedModels,
-    selectModel
+    availableModelsForActiveProvider
   } = useApi();
   const [newKey, setNewKey] = useState('');
   const [provider, setProvider] = useState<ApiProviderType>('gemini');
@@ -53,6 +54,11 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
   };
   
   if (!isOpen) return null;
+
+  const providerToShow: ApiProviderType = activeApiKey?.provider || 'gemini';
+  const providerName = providerToShow === 'gemini' ? 'Gemini' : 'OpenAI';
+  const modelsToList = activeApiKey ? availableModelsForActiveProvider : AVAILABLE_MODELS.gemini;
+  const selectedValue = selectedModels[providerToShow] || '';
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
@@ -134,37 +140,20 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
           {/* Model Selection */}
           <div className="space-y-3 pt-4 border-t border-slate-700">
             <h3 className="font-medium text-slate-300">Chọn Model AI</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="gemini-model-select" className="block text-sm font-medium text-slate-400 mb-1">
-                  Gemini
-                </label>
-                <select
-                  id="gemini-model-select"
-                  value={selectedModels.gemini}
-                  onChange={(e) => selectModel('gemini', e.target.value)}
+            <div>
+              <label htmlFor="active-model-select" className="block text-sm font-medium text-slate-400 mb-1">
+                Model cho {providerName}
+              </label>
+              <select
+                  id="active-model-select"
+                  value={selectedValue}
+                  onChange={(e) => selectModel(providerToShow, e.target.value)}
                   className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
-                >
-                  {AVAILABLE_MODELS.gemini.map(model => (
-                    <option key={model} value={model}>{model}</option>
+              >
+                  {modelsToList.map(model => (
+                      <option key={model} value={model}>{model}</option>
                   ))}
-                </select>
-              </div>
-               <div>
-                <label htmlFor="openai-model-select" className="block text-sm font-medium text-slate-400 mb-1">
-                  OpenAI
-                </label>
-                <select
-                  id="openai-model-select"
-                  value={selectedModels.openai}
-                  onChange={(e) => selectModel('openai', e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200"
-                >
-                  {AVAILABLE_MODELS.openai.map(model => (
-                    <option key={model} value={model}>{model}</option>
-                  ))}
-                </select>
-              </div>
+              </select>
             </div>
           </div>
         </div>

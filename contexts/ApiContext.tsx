@@ -43,14 +43,14 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const storedModels = localStorage.getItem(LOCAL_STORAGE_MODELS);
       const parsed = storedModels ? JSON.parse(storedModels) : {};
       const defaults = {
-        gemini: AVAILABLE_MODELS.gemini[0],
+        gemini: 'gemini-2.5-pro',
         openai: AVAILABLE_MODELS.openai[0],
       };
       return { ...defaults, ...parsed };
     } catch (error) {
       console.error("Failed to parse selected models from localStorage", error);
       return {
-        gemini: AVAILABLE_MODELS.gemini[0],
+        gemini: 'gemini-2.5-pro',
         openai: AVAILABLE_MODELS.openai[0],
       };
     }
