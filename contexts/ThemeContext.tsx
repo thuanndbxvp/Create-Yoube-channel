@@ -69,7 +69,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return (storedTheme as Theme) || 'orange';
     } catch (error) {
       console.error("Failed to read theme from localStorage:");
-      // FIX: The error object in a catch block is of type 'unknown'. Safely convert it to a string before logging.
+      // Fix: The error object in a catch block is of type 'unknown'. Safely convert it to a string before logging.
       console.error(String(error));
       return 'orange';
     }

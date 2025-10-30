@@ -13,74 +13,25 @@ interface CompetitorAnalyzerProps {
   setAnalyzerInputFileName: (name: string) => void;
 }
 
-const ANALYSIS_PROMPT = `Bạn là chuyên gia YouTube Data & Strategy. Hãy đọc file Excel có nhiều sheet (mỗi sheet là dữ liệu 1 kênh với các cột: Tên video, Mô tả, Thời lượng, Lượt xem, Like, URL). Phân tích từng sheet, so sánh các kênh, tìm mô hình nội dung hiệu quả, đề xuất chiến lược, gói brand, 24 chủ đề trend, công thức sản xuất và hướng phát triển cho kênh của người dùng.
+const ANALYSIS_PROMPT = `Bạn là chuyên gia Phân tích Chiến lược YouTube. Dựa trên dữ liệu Excel được cung cấp (mỗi sheet là một kênh đối thủ), hãy tạo một báo cáo chiến lược toàn diện cho kênh của người dùng.
 
-Hãy phân tích và xuất ra báo cáo đầy đủ theo cấu trúc chuẩn sau:
+Báo cáo cần bao gồm các phần chính sau, trình bày bằng tiếng Việt và sử dụng Markdown:
 
-## 📊 1. Tổng quan dữ liệu (All Channels Overview)
-- Tổng số kênh (sheet): {count_channels}
-- Tổng số video: {total_videos}
-- Tổng lượt xem: {sum_views_all}
-- View trung bình/video: {avg_views_all}
-- Like trung bình/video: {avg_likes_all}
-- Tỷ lệ Like/View trung bình: {(avg_likes_all/avg_views_all)*100}%
-- Thời lượng trung bình: {avg_duration_all}
+1.  **Tổng quan thị trường:** Phân tích các chỉ số chính (views, likes, v.v.) trên tất cả các kênh để xác định quy mô và mức độ tương tác chung.
+2.  **Phân tích từng đối thủ:** Với mỗi kênh, xác định:
+    *   Các video hoạt động hiệu quả nhất.
+    *   Các chủ đề và từ khóa cốt lõi.
+    *   Điểm mạnh, điểm yếu và chiến lược nội dung đặc trưng.
+3.  **So sánh & Benchmarking:** So sánh hiệu suất giữa các kênh để xác định kênh dẫn đầu và các xu hướng chung của thị trường ngách.
+4.  **Chiến lược đề xuất cho kênh của tôi:**
+    *   **Định vị:** Xác định khán giả mục tiêu và các chủ đề nội dung (content pillars) chính.
+    *   **Nội dung:** Gợi ý các định dạng video, độ dài tối ưu và khung giờ đăng hiệu quả.
+    *   **SEO:** Cung cấp bộ từ khóa ban đầu và mẫu mô tả video.
+5.  **Ý tưởng nội dung:** Liệt kê 15-20 chủ đề video tiềm năng, kết hợp giữa xu hướng và nội dung evergreen.
+6.  **Gói thương hiệu:** Đề xuất 3-4 concept thương hiệu cho kênh (tên, mô tả, phong cách hình ảnh).
+7.  **Lộ trình phát triển:** Vạch ra các bước hành động chính cho 30-60 ngày đầu tiên.
 
-## 📈 2. Phân tích chi tiết từng kênh (Per-Channel Analysis)
-### Kênh: {sheet_name}
-- Số video, tổng view, view TB, like TB, Like/View%, thời lượng TB
-- Top 5 video view cao nhất & Top 5 video tỷ lệ Like/View cao nhất
-- Top 10 từ khóa phổ biến từ tên và mô tả
-- Phân bố độ dài: <5p | 5-15p | >15p + hiệu suất mỗi nhóm
-- Phân tích tương quan (Duration ↔ Views)
-- Nhận định nhanh về điểm mạnh và điểm yếu nội dung
-
-## ⚔️ 3. So sánh chéo giữa các kênh (Cross-Channel Benchmark)
-- Bảng tổng hợp hiệu suất | Kênh | Tổng video | Tổng view | View TB | Like TB | Like/View % | Độ dài TB |
-- Nhận diện kênh dẫn đầu và xu hướng nội dung chung
-- 3 insight liên-kênh và điểm khác biệt đáng chú ý
-
-## 🧭 4. Hướng nội dung cho KÊNH CỦA TÔI (Content Direction for My Channel)
-- Chân dung khán giả mục tiêu (nỗi đau – động lực – ngữ cảnh xem – thời gian xem)
-- 3 content pillars cốt lõi + giải thích vì sao phù hợp
-- 5 định dạng video đề xuất (ví dụ: story-driven, short facts, animated explainer …)
-- Độ dài tối ưu và 3 khung giờ đăng hiệu quả nhất
-- SEO starter pack = 10 từ khóa chính + 10 phụ + mẫu mô tả 160–220 ký tự
-
-## ⚙️ 5. Công thức sản xuất (Production Formula)
-- **Cấu trúc video:** Hook (0–15s) → Value Blocks (3 đoạn) → Recap → CTA
-- **Nhịp dựng:** Cắt mỗi X giây | B-roll mỗi Y giây | WPM ≈ {wpm}
-- **Âm thanh:** Nhạc thể loại gợi ý + mức âm lượng tương đối
-- **Thumbnail:** Bố cục 3 điểm, tối đa 4 từ text, tương phản cao
-- **Checklist 8 bước QA:** Âm – Ảnh – Sub – Metadata – Tags – End Screen …
-- **A/B Testing Plan 4 tuần:** Tiêu đề + Thumbnail + 30s đầu → đánh giá CTR, AVD
-
-## 🔥 6. 24 Chủ đề video “đi đúng trend” (24 Trending Video Topics)
-- Chia 3 nhóm (8 chủ đề/nhóm): Hot Keywords / Evergreen Boost / News-Adjacent
-- Mỗi chủ đề gồm: Tiêu đề gợi ý | Hook 10-15s | Mô tả ≤ 25 từ | Từ khóa chính/phụ | Độ dài gợi ý | CTA | Text thumbnail
-
-## 🎨 7. Gói brand đề xuất (5 phương án)
-Mỗi phương án gồm:
-- **Tên kênh (EN)** + Chú giải ý nghĩa (VI)
-- **Mô tả kênh:** 1 câu giá trị + 1 câu bằng chứng/xã hội
-- **Hashtags:** 8-12 từ cốt lõi
-- **Thumbnail style:** Màu chủ đạo + font + bố cục + ví dụ text
-- **Logo idea:** Biểu tượng, ý nghĩa, palette 4 màu (mã HEX)
-
-## 📅 8. Lộ trình 30–60–90 ngày & KPI
-- Mục tiêu: CTR ↑ %, AVD ↑ %, Like/View ↑ %, tần suất đăng
-- Lịch mẫu 4 tuần (ngày | chủ đề | độ dài | loại video)
-- Checklist 10 mục khi xuất bản
-
-## 📈 9. Biểu đồ (thực thi nếu có Code Interpreter)
-- Scatter Views vs Duration (theo kênh)
-- Histogram Like/View %
-- Bar chart Top keywords
-
-## 📚 10. Phụ lục & Template
-- Top 20 video toàn hệ theo Views và Like/View %
-- Template tiêu đề (10 công thức) / mô tả (3 mẫu) / CTA (5 mẫu)
-- Gợi ý đặt tên file & cấu trúc thư mục dự án`;
+Hãy tập trung vào việc đưa ra những nhận định sâu sắc và các đề xuất có tính ứng dụng cao.`;
 
 const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     return new Promise((resolve, reject) => {
