@@ -53,7 +53,17 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `youtube_assistant_sessions_${new Date().toISOString().split('T')[0]}.json`;
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const formattedDateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+    link.download = `CreateYoutube_${formattedDateTime}.json`;
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
