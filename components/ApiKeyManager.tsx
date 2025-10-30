@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApi } from '../contexts/ApiContext';
 import { ApiProviderType, AVAILABLE_MODELS } from '../types';
 import { PlusIcon, TrashIcon, CheckCircleIcon, KeyIcon, XMarkIcon } from './icons';
-import { validateApiKey } from '../services/aiService';
+import { validateApiKey } from '../services/geminiService';
 import Spinner from './Spinner';
 
 interface ApiKeyManagerProps {
@@ -33,14 +33,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
     }
     setError('');
     setIsVerifying(true);
-
-    if (provider === 'openai') {
-        // OpenAI keys are added directly without validation for now
-        addApiKey(provider, newKey);
-        setNewKey('');
-        setIsVerifying(false);
-        return;
-    }
 
     const { success, error: validationError } = await validateApiKey(provider, newKey);
     setIsVerifying(false);
@@ -99,7 +91,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ isOpen, onClose }) => {
                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md transition-transform transform hover:scale-105 duration-200 disabled:bg-slate-600 disabled:cursor-wait"
               >
                 {isVerifying ? <Spinner /> : <PlusIcon className="w-5 h-5" />}
-                <span className="sm:inline">{isVerifying ? "Đang kiểm tra..." : (provider === 'gemini' ? "Kiểm tra & Thêm" : "Thêm")}</span>
+                <span className="sm:inline">{isVerifying ? "Đang kiểm tra..." : "Kiểm tra & Thêm"}</span>
               </button>
             </div>
              {error && <p className="text-red-400 text-sm mt-1">{error}</p>}

@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { analyzeCompetitorData } from '../services/aiService';
 import { ResultData } from '../types';
 import { useApi } from '../contexts/ApiContext';
 import { UploadIcon, ChartBarIcon } from './icons';
@@ -135,8 +134,7 @@ const CompetitorAnalyzer: React.FC<CompetitorAnalyzerProps> = ({ setLoading, set
         allSheetsData += `\n--- END OF SHEET: ${sheetName} ---\n\n`;
       });
       
-      // Use the context's executeApiCall which handles retries and key switching
-      const result = await executeApiCall(analyzeCompetitorData, ANALYSIS_PROMPT, allSheetsData);
+      const result = await executeApiCall('analyzeCompetitorData', ANALYSIS_PROMPT, allSheetsData);
       setResult(result);
     } catch (err) {
       console.error(err);

@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { ApiKey, ApiProviderType, AVAILABLE_MODELS } from '../types';
+import * as geminiService from '../services/geminiService';
+import * as openaiService from '../services/openaiService';
+
 
 interface ApiContextType {
   apiKeys: ApiKey[];
@@ -12,7 +15,7 @@ interface ApiContextType {
   selectedModelForActiveProvider: string | undefined;
   availableModelsForActiveProvider: string[];
   executeApiCall: <T extends any[], R>(
-    apiFunction: (...args: [...T, string, string]) => Promise<R>,
+    apiFunctionName: 'generateChannelAssets' | 'analyzeCompetitorData',
     ...args: T
   ) => Promise<R>;
 }
@@ -29,7 +32,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const storedKeys = localStorage.getItem(LOCAL_STORAGE_KEYS);
       return storedKeys ? JSON.parse(storedKeys) : [];
     } catch (error) {
-      console.error("Failed to parse API keys from localStorage", error);
+      console.error("Failed to parse API keys from localStorage", String(error));
       return [];
     }
   });
@@ -48,7 +51,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       return { ...defaults, ...parsed };
     } catch (error) {
-      console.error("Failed to parse selected models from localStorage", error);
+      console.error("Failed to parse selected models from localStorage", String(error));
       return {
         gemini: 'gemini-2.5-pro',
         openai: AVAILABLE_MODELS.openai[0],
@@ -128,7 +131,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [activeApiKey]);
 
   const executeApiCall = useCallback(async <T extends any[], R>(
-    apiFunction: (...args: [...T, string, string]) => Promise<R>,
+    apiFunctionName: 'generateChannelAssets' | 'analyzeCompetitorData',
     ...args: T
   ): Promise<R> => {
     if (!activeApiKey || !selectedModelForActiveProvider) {
@@ -140,6 +143,8 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (keysForProvider.length === 0) {
       throw new Error(`Không tìm thấy API key nào cho ${provider}.`);
     }
+    
+    const service = provider === 'gemini' ? geminiService : openaiService;
 
     let startIndex = keysForProvider.findIndex(k => k.id === activeApiKey.id);
     if (startIndex === -1) startIndex = 0;
@@ -154,7 +159,15 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       try {
-        console.log(`Attempting API call with key: ${currentKey.displayName}`);
+        console.log(`Attempting API call with key: ${currentKey.displayName} using ${provider} service`);
+        
+        // FIX: The type assertion here was too strict for TypeScript to resolve the union of possible function signatures.
+        // Casting to 'unknown' first tells TypeScript to trust our logic.
+        const apiFunction = service[apiFunctionName] as unknown as (...args: [...T, string, string]) => Promise<R>;
+        if (typeof apiFunction !== 'function') {
+            throw new Error(`Function ${apiFunctionName} not found in ${provider} service.`);
+        }
+        
         const result = await apiFunction(...args, currentKey.key, model);
         
         if (currentKey.id !== activeApiKey.id) {
@@ -163,14 +176,12 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         return result;
       } catch (error) {
-        console.warn(`API call failed for key ${currentKey.displayName}:`, error);
+        console.warn(`API call failed for key ${currentKey.displayName}:`, String(error));
         if (i === keysForProvider.length - 1) {
-          // This was the last key, throw the final error
           throw new Error(`Tất cả API keys cho ${provider} đều thất bại. Lỗi cuối cùng: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
     }
-    // This should not be reachable, but as a fallback:
     throw new Error(`Tất cả API keys cho ${provider} đều thất bại.`);
 
   }, [apiKeys, activeApiKey, selectedModelForActiveProvider, selectedModels, setActiveApiKeyId]);

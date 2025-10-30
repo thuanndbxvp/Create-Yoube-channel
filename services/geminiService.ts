@@ -1,12 +1,6 @@
-// FIX: Updated imports to use ChannelIdeaSet and LANGUAGES from types, which resolves the original error.
 import { GoogleGenAI, Type } from "@google/genai";
-import { ChannelIdeaSet, LANGUAGES } from "../types";
+import { ApiProviderType, ChannelIdeaSet, LANGUAGES } from "../types";
 
-// FIX: Removed module-level API key and ai instance to make the service stateless,
-// consistent with the rest of the application which passes the API key per-request.
-
-// FIX: Replaced the outdated schema with the one used in aiService.ts,
-// which matches the ChannelIdeaSet type and the application's needs.
 const channelIdeaSetSchema = {
   type: Type.OBJECT,
   properties: {
@@ -65,10 +59,6 @@ const finalSchema = {
     description: "Một danh sách các bộ ý tưởng kênh hoàn chỉnh."
 }
 
-
-// FIX: Updated the function to align with the application's architecture.
-// It now accepts language, apiKey, and model, returns an array of ChannelIdeaSet,
-// and uses an updated prompt and schema to generate multiple ideas.
 export const generateChannelAssets = async (idea: string, language: string, numResults: number, apiKey: string, model: string): Promise<ChannelIdeaSet[]> => {
   if (!apiKey) throw new Error("API Key is required.");
   
@@ -110,11 +100,9 @@ ${vietnameseExplanationInstruction}
   return parsedResponse as ChannelIdeaSet[];
 };
 
-// FIX: Updated the function to accept apiKey and model parameters to make it stateless.
 export const analyzeCompetitorData = async (prompt: string, excelData: string, apiKey: string, model: string): Promise<string> => {
     if (!apiKey) throw new Error("API Key is required.");
 
-    // FIX: Create a new AI instance with the provided key for this request.
     const ai = new GoogleGenAI({ apiKey });
     
     const fullPrompt = `Bạn là một nhà phân tích dữ liệu chuyên về chiến lược YouTube. 
@@ -135,10 +123,39 @@ ${excelData}
 Hãy trình bày kết quả phân tích bằng tiếng Việt một cách rõ ràng, mạch lạc, sử dụng Markdown để định dạng.`;
 
   const response = await ai.models.generateContent({
-    // FIX: Use the model provided as a parameter instead of a hardcoded value.
     model: model,
     contents: fullPrompt,
   });
 
   return response.text;
+};
+
+export const validateApiKey = async (provider: ApiProviderType, apiKey: string): Promise<{ success: boolean; error?: string }> => {
+    if (provider === 'gemini') {
+        try {
+            const ai = new GoogleGenAI({ apiKey });
+            // A very simple, fast, and cheap request to validate the key
+            await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: 'h' });
+            return { success: true };
+        } catch (e: any) {
+            console.error("Gemini Key Validation Error:", e);
+            return { success: false, error: e.message || 'API Key không hợp lệ hoặc có lỗi mạng.' };
+        }
+    }
+    if (provider === 'openai') {
+        try {
+            const response = await fetch("https://api.openai.com/v1/models", {
+                headers: { "Authorization": `Bearer ${apiKey}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || 'Unknown OpenAI API error');
+            }
+            return { success: true };
+        } catch (e: any) {
+            console.error("OpenAI Key Validation Error:", e);
+            return { success: false, error: e.message || 'API Key không hợp lệ hoặc có lỗi mạng.' };
+        }
+    }
+    return { success: false, error: 'Provider không được hỗ trợ để xác thực.' };
 };

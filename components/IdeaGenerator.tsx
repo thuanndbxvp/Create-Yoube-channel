@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { generateChannelAssets } from '../services/aiService';
 import { ResultData, LANGUAGES } from '../types';
 import { useApi } from '../contexts/ApiContext';
 import { SparklesIcon } from './icons';
@@ -37,7 +36,7 @@ const IdeaGenerator: React.FC<IdeaGeneratorProps> = ({ ideaValue, setLoading, se
 
     try {
       // Use the context's executeApiCall which handles retries and key switching
-      const result = await executeApiCall(generateChannelAssets, ideaValue, language, numResults);
+      const result = await executeApiCall('generateChannelAssets', ideaValue, language, numResults);
       setResult(result);
     } catch (err) {
       console.error(err);
