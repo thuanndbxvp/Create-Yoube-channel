@@ -15,19 +15,20 @@ interface CompetitorAnalyzerProps {
 
 const ANALYSIS_PROMPT = `Bạn là chuyên gia Phân tích Chiến lược YouTube. Dựa trên dữ liệu Excel được cung cấp (mỗi sheet là một kênh đối thủ), hãy tạo một báo cáo chiến lược toàn diện cho kênh của người dùng.
 
+**Quan trọng:** Báo cáo này nên tập trung vào phân tích **định tính** và các đề xuất chiến lược. **Không** tạo các bảng dữ liệu chi tiết với các con số thống kê cụ thể để vẽ biểu đồ. Thay vào đó, hãy đưa ra các nhận định và tóm tắt.
+
 Báo cáo cần bao gồm các phần chính sau, trình bày bằng tiếng Việt và sử dụng Markdown:
 
-1.  **Tổng quan thị trường:** Phân tích các chỉ số chính (views, likes, v.v.) trên tất cả các kênh để xác định quy mô và mức độ tương tác chung.
-2.  **Phân tích từng đối thủ:** Với mỗi kênh, xác định:
-    *   Các video hoạt động hiệu quả nhất.
-    *   Các chủ đề và từ khóa cốt lõi.
-    *   Điểm mạnh, điểm yếu và chiến lược nội dung đặc trưng.
-3.  **So sánh & Benchmarking:** So sánh hiệu suất giữa các kênh để xác định kênh dẫn đầu và các xu hướng chung của thị trường ngách.
+1.  **Tổng quan thị trường ngách:** Thay vì liệt kê số liệu, hãy nhận định chung về chủ đề, phong cách video phổ biến và mức độ cạnh tranh.
+2.  **Phân tích từng đối thủ:** Với mỗi kênh, tập trung vào:
+    *   Các chủ đề và từ khóa cốt lõi họ đang nhắm tới.
+    *   Điểm mạnh, điểm yếu và chiến lược nội dung đặc trưng (ví dụ: họ tập trung vào hướng dẫn, giải trí, hay tin tức?).
+3.  **Xu hướng và Cơ hội:** Xác định các xu hướng nội dung chung và các "khoảng trống" hoặc cơ hội mà kênh của người dùng có thể khai thác.
 4.  **Chiến lược đề xuất cho kênh của tôi:**
-    *   **Định vị:** Xác định khán giả mục tiêu và các chủ đề nội dung (content pillars) chính.
-    *   **Nội dung:** Gợi ý các định dạng video, độ dài tối ưu và khung giờ đăng hiệu quả.
-    *   **SEO:** Cung cấp bộ từ khóa ban đầu và mẫu mô tả video.
-5.  **Ý tưởng nội dung:** Liệt kê 15-20 chủ đề video tiềm năng, kết hợp giữa xu hướng và nội dung evergreen.
+    *   **Định vị:** Xác định khán giả mục tiêu và các chủ đề nội dung (content pillars) chính dựa trên phân tích.
+    *   **Nội dung:** Gợi ý các định dạng video, phong cách biên tập và cách tiếp cận để tạo sự khác biệt.
+    *   **SEO:** Cung cấp bộ từ khóa ban đầu và mẫu mô tả video tối ưu.
+5.  **Ý tưởng nội dung:** Liệt kê 15-20 chủ đề video tiềm năng, dựa trên những gì đang hiệu quả và các cơ hội đã xác định.
 6.  **Gói thương hiệu:** Đề xuất 3-4 concept thương hiệu cho kênh (tên, mô tả, phong cách hình ảnh).
 7.  **Lộ trình phát triển:** Vạch ra các bước hành động chính cho 30-60 ngày đầu tiên.
 
